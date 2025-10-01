@@ -1,11 +1,7 @@
 // seo-script.js
 const seoBot = document.querySelector("#seo-bot");
 
-// bouw chat UI
 seoBot.innerHTML = `
-  <div class="chat-header">
-    <span>Kennisbank Chat 💡</span>
-  </div>
   <div class="chat-messages"></div>
   <div class="chat-input">
     <textarea placeholder="Stel je vraag..."></textarea>
@@ -73,8 +69,8 @@ seoInput.addEventListener("keydown", e => {
   }
 });
 
-// ✅ Vast startbericht (hook)
+// ✅ Startbericht in dezelfde stijl als floating versie
 appendMessage(
-  "Welkom bij de kennisbank 👋\n\nWil je snel het juiste artikel vinden? Stel hieronder je vraag en ik wijs je direct door!",
+  "Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?",
   true
 );
