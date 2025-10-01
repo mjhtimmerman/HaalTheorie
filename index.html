@@ -264,7 +264,7 @@ function sendMessage() {
     messages.scrollTop = messages.scrollHeight;
 
     // Dummy fetch (vervang door jouw n8n endpoint)
-    fetch("https://dummyjson.com/quotes/random")
+    fetch("https://matstimmerman.app.n8n.cloud/webhook/1dc55584-0033-429e-9788-d03458ee20b7/chat")
       .then(res => res.json())
       .then(data => {
         const botContainer = document.createElement("div");
