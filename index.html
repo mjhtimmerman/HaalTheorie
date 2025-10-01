@@ -232,13 +232,14 @@ closeBtn.addEventListener("click", closeChat);
 function sendMessage() {
   const text = input.value.trim();
   if (text !== "") {
+    // User message
     const userMsg = document.createElement("div");
     userMsg.className = "message user";
     userMsg.innerText = text;
     messages.appendChild(userMsg);
     messages.scrollTop = messages.scrollHeight;
 
-    // Dummy fetch - vervang door jouw n8n endpoint
+    // Dummy fetch (vervang door jouw n8n endpoint)
     fetch("https://dummyjson.com/quotes/random")
       .then(res => res.json())
       .then(data => {
@@ -246,7 +247,7 @@ function sendMessage() {
         botContainer.className = "bot-message-container";
 
         const botAvatar = document.createElement("img");
-        botAvatar.src = "https://via.placeholder.com/40"; // <-- Nawfal foto hier
+        botAvatar.src = "https://via.placeholder.com/40"; // <-- Nawfal’s echte foto hier
         botAvatar.className = "bot-avatar";
 
         const botMsg = document.createElement("div");
