@@ -225,7 +225,7 @@ function openChat() {
   chatWindow.style.display = "flex";
   introBubble.style.display = "none";
 
-  // Eerste welkomsbericht tonen (maar 1x per sessie)
+  // Welkomsbericht maar 1x per sessie
   if (!welcomeShown) {
     const botContainer = document.createElement("div");
     botContainer.className = "bot-message-container";
@@ -243,7 +243,7 @@ function openChat() {
     messages.appendChild(botContainer);
     messages.scrollTop = messages.scrollHeight;
 
-    welcomeShown = true; // na eerste keer niet meer tonen
+    welcomeShown = true;
   }
 }
 
@@ -263,26 +263,44 @@ function sendMessage() {
     messages.appendChild(userMsg);
     messages.scrollTop = messages.scrollHeight;
 
-    // Dummy fetch (vervang door jouw n8n endpoint)
-    fetch("https://matstimmerman.app.n8n.cloud/webhook/1dc55584-0033-429e-9788-d03458ee20b7/chat")
-      .then(res => res.json())
-      .then(data => {
-        const botContainer = document.createElement("div");
-        botContainer.className = "bot-message-container";
+    // Fetch naar n8n webhook
+    fetch("https://matstimmerman.app.n8n.cloud/webhook/1dc55584-0033-429e-9788-d03458ee20b7/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    })
+    .then(async res => {
+      try {
+        return await res.json();
+      } catch {
+        const txt = await res.text();
+        return { reply: txt };
+      }
+    })
+    .then(data => {
+      const botContainer = document.createElement("div");
+      botContainer.className = "bot-message-container";
 
-        const botAvatar = document.createElement("img");
-        botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
-        botAvatar.className = "bot-avatar";
+      const botAvatar = document.createElement("img");
+      botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
+      botAvatar.className = "bot-avatar";
 
-        const botMsg = document.createElement("div");
-        botMsg.className = "message bot";
-        botMsg.innerText = data.quote || "Dit is een testantwoord.";
+      const botMsg = document.createElement("div");
+      botMsg.className = "message bot";
 
-        botContainer.appendChild(botAvatar);
-        botContainer.appendChild(botMsg);
-        messages.appendChild(botContainer);
-        messages.scrollTop = messages.scrollHeight;
-      });
+      botMsg.innerText =
+        data.reply ||
+        data.answer ||
+        (data.messages && data.messages[0]?.text) ||
+        (typeof data === "string" ? data : JSON.stringify(data)) ||
+        "Geen antwoord ontvangen.";
+
+      botContainer.appendChild(botAvatar);
+      botContainer.appendChild(botMsg);
+      messages.appendChild(botContainer);
+      messages.scrollTop = messages.scrollHeight;
+    })
+    .catch(err => console.error("Fout bij ophalen:", err));
 
     input.value = "";
   }
@@ -300,4 +318,3 @@ input.addEventListener("keydown", function(e) {
 
 </body>
 </html>
-
