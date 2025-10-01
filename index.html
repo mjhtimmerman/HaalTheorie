@@ -46,7 +46,7 @@
       background: #0078ff;
       color: #fff;
       padding: 10px 14px;
-      border-radius: 14px 14px 14px 0;
+      border-radius: 14px; /* alle hoeken afgerond */
       font-size: 14px;
       line-height: 1.3;
       max-width: 240px;
@@ -219,10 +219,34 @@ const sendBtn = document.querySelector(".chat-input button");
 const input = document.querySelector(".chat-input textarea");
 const messages = document.querySelector(".chat-messages");
 
+let welcomeShown = false; // flag voor eerste bericht
+
 function openChat() {
   chatWindow.style.display = "flex";
   introBubble.style.display = "none";
+
+  // Eerste welkomsbericht tonen (maar 1x per sessie)
+  if (!welcomeShown) {
+    const botContainer = document.createElement("div");
+    botContainer.className = "bot-message-container";
+
+    const botAvatar = document.createElement("img");
+    botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
+    botAvatar.className = "bot-avatar";
+
+    const botMsg = document.createElement("div");
+    botMsg.className = "message bot";
+    botMsg.innerText = "Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?";
+
+    botContainer.appendChild(botAvatar);
+    botContainer.appendChild(botMsg);
+    messages.appendChild(botContainer);
+    messages.scrollTop = messages.scrollHeight;
+
+    welcomeShown = true; // na eerste keer niet meer tonen
+  }
 }
+
 function closeChat() {
   chatWindow.style.display = "none";
 }
@@ -247,7 +271,7 @@ function sendMessage() {
         botContainer.className = "bot-message-container";
 
         const botAvatar = document.createElement("img");
-        botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png"; // <-- Nawfal’s echte foto hier
+        botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
         botAvatar.className = "bot-avatar";
 
         const botMsg = document.createElement("div");
@@ -276,3 +300,4 @@ input.addEventListener("keydown", function(e) {
 
 </body>
 </html>
+
