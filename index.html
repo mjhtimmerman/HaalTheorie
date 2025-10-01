@@ -35,7 +35,7 @@
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       transition: transform 0.2s ease;
-      background: url("https://via.placeholder.com/64") center/cover no-repeat;
+      background: url("https://github.com/mjhtimmerman/HaalTheorie/blob/24125a567100b4a437921edf6eb9e8ebe230546e/Trengo%20Widget.png") center/cover no-repeat;
     }
 
     .chat-launcher:hover {
@@ -200,7 +200,7 @@
 <!-- Chat window -->
 <div class="chat-window">
   <div class="chat-header">
-    <img src="https://via.placeholder.com/100x24?text=HaalTheorie+Logo" alt="HaalTheorie Logo" class="chat-logo">
+    <img src="https://github.com/mjhtimmerman/HaalTheorie/blob/24125a567100b4a437921edf6eb9e8ebe230546e/logo%20ht.png" alt="HaalTheorie Logo" class="chat-logo">
     <button class="close-chat">×</button>
   </div>
   <div class="chat-messages"></div>
@@ -240,14 +240,14 @@ function sendMessage() {
     messages.scrollTop = messages.scrollHeight;
 
     // Dummy fetch (vervang door jouw n8n endpoint)
-    fetch("https://dummyjson.com/quotes/random")
+    fetch("https://matstimmerman.app.n8n.cloud/webhook/1dc55584-0033-429e-9788-d03458ee20b7/chat")
       .then(res => res.json())
       .then(data => {
         const botContainer = document.createElement("div");
         botContainer.className = "bot-message-container";
 
         const botAvatar = document.createElement("img");
-        botAvatar.src = "https://via.placeholder.com/40"; // <-- Nawfal’s echte foto hier
+        botAvatar.src = "https://github.com/mjhtimmerman/HaalTheorie/blob/24125a567100b4a437921edf6eb9e8ebe230546e/Trengo%20Widget.png"; // <-- Nawfal’s echte foto hier
         botAvatar.className = "bot-avatar";
 
         const botMsg = document.createElement("div");
