@@ -15,6 +15,20 @@ if (!sessionId) {
   localStorage.setItem("chatSessionId", sessionId);
 }
 
+// Typing indicator element
+const typingIndicator = document.createElement("div");
+typingIndicator.className = "typing-indicator";
+typingIndicator.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+messages.appendChild(typingIndicator);
+
+function showTypingIndicator() {
+  typingIndicator.style.display = "inline-block";
+  messages.scrollTop = messages.scrollHeight;
+}
+function hideTypingIndicator() {
+  typingIndicator.style.display = "none";
+}
+
 function openChat() {
   chatWindow.style.display = "flex";
   introBubble.style.display = "none";
@@ -56,6 +70,9 @@ function sendMessage() {
     messages.appendChild(userMsg);
     messages.scrollTop = messages.scrollHeight;
 
+    // Typing indicator na 0.4s tonen
+    setTimeout(showTypingIndicator, 400);
+
     // POST naar n8n webhook inclusief sessionId
     fetch("https://matstimmerman.app.n8n.cloud/webhook/1dc55584-0033-429e-9788-d03458ee20b7/chat", {
       method: "POST",
@@ -71,6 +88,9 @@ function sendMessage() {
       }
     })
     .then(data => {
+      // Typing indicator verbergen zodra antwoord binnenkomt
+      hideTypingIndicator();
+
       const botContainer = document.createElement("div");
       botContainer.className = "bot-message-container";
 
