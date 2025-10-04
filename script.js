@@ -74,7 +74,7 @@ function sendMessage() {
     setTimeout(showTypingIndicator, 400);
 
     // POST naar n8n webhook inclusief sessionId
-    fetch("https://matstimmerman.app.n8n.cloud/webhook/1dc55584-0033-429e-9788-d03458ee20b7/chat", {
+    fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text, sessionId: sessionId })
