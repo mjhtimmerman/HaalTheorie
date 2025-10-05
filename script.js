@@ -15,6 +15,22 @@ if (!sessionId) {
   localStorage.setItem("chatSessionId", sessionId);
 }
 
+// Typing indicator element
+const typingIndicator = document.createElement("div");
+typingIndicator.className = "typing-indicator";
+typingIndicator.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+
+function showTypingIndicator() {
+  // verwijder eerst als er al een indicator bestaat
+  if (typingIndicator.parentElement) typingIndicator.remove();
+  messages.appendChild(typingIndicator);
+  typingIndicator.style.display = "inline-block";
+  messages.scrollTop = messages.scrollHeight;
+}
+function hideTypingIndicator() {
+  typingIndicator.style.display = "none";
+}
+
 function openChat() {
   chatWindow.style.display = "flex";
   introBubble.style.display = "none";
@@ -56,6 +72,9 @@ function sendMessage() {
     messages.appendChild(userMsg);
     messages.scrollTop = messages.scrollHeight;
 
+    // Typing indicator na 0.2s tonen
+    setTimeout(showTypingIndicator, 200);
+
     // POST naar n8n webhook inclusief sessionId
     fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
       method: "POST",
@@ -71,6 +90,9 @@ function sendMessage() {
       }
     })
     .then(data => {
+      // Typing indicator verbergen zodra antwoord binnenkomt
+      hideTypingIndicator();
+
       const botContainer = document.createElement("div");
       botContainer.className = "bot-message-container";
 
