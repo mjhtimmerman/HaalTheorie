@@ -101,4 +101,43 @@
 #seo-bot .chat-input button:hover {
   background: #28a745;
 }
+/* Typindicator */
+#seo-bot .typing-indicator {
+  display: flex;
+  gap: 4px;
+  align-self: flex-start;
+  padding-left: 54px;
+  margin-bottom: 8px;
+}
+
+#seo-bot .typing-indicator .dot {
+  width: 8px;
+  height: 8px;
+  background: #ccc;
+  border-radius: 50%;
+  animation: blink 1.4s infinite both;
+}
+
+#seo-bot .typing-indicator .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+#seo-bot .typing-indicator .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+/* Zorg dat user messages rechts uitgelijnd staan */
+#seo-bot .bot-message-container {
+  width: 100%;
+}
+#seo-bot .message.user {
+  margin-left: auto;
+}
+#seo-bot .message.bot {
+  margin-right: auto;
+}
 
