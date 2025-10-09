@@ -1,4 +1,4 @@
-// seo-script.js
+// seo-script.js (met typindicator en correcte uitlijning)
 const seoBot = document.querySelector("#seo-bot");
 
 seoBot.innerHTML = `
@@ -14,6 +14,26 @@ const seoInput = seoBot.querySelector("textarea");
 const seoSendBtn = seoBot.querySelector("button");
 
 let seoSessionId = Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9);
+
+// Typindicator aanmaken
+const typingIndicator = document.createElement("div");
+typingIndicator.className = "typing-indicator";
+typingIndicator.innerHTML = `
+  <div class="dot"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+`;
+typingIndicator.style.display = "none";
+seoMessages.appendChild(typingIndicator);
+
+function showTypingIndicator() {
+  typingIndicator.style.display = "flex";
+  seoMessages.scrollTop = seoMessages.scrollHeight;
+}
+
+function hideTypingIndicator() {
+  typingIndicator.style.display = "none";
+}
 
 function appendMessage(text, fromBot = false) {
   const container = document.createElement("div");
@@ -31,7 +51,7 @@ function appendMessage(text, fromBot = false) {
   msg.innerText = text;
   container.appendChild(msg);
 
-  seoMessages.appendChild(container);
+  seoMessages.insertBefore(container, typingIndicator);
   seoMessages.scrollTop = seoMessages.scrollHeight;
 }
 
@@ -40,6 +60,9 @@ function seoSendMessage() {
   if (!text) return;
 
   appendMessage(text, false);
+  seoInput.value = "";
+
+  showTypingIndicator();
 
   fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
     method: "POST",
@@ -51,14 +74,16 @@ function seoSendMessage() {
       catch { return { reply: await res.text() }; }
     })
     .then(data => {
+      hideTypingIndicator();
       appendMessage(
         data.reply || data.answer || (data.messages && data.messages[0]?.text) || data.output || "Geen antwoord ontvangen.",
         true
       );
     })
-    .catch(err => console.error("Fout bij SEO-chat:", err));
-
-  seoInput.value = "";
+    .catch(err => {
+      hideTypingIndicator();
+      console.error("Fout bij SEO-chat:", err);
+    });
 }
 
 seoSendBtn.addEventListener("click", seoSendMessage);
@@ -69,8 +94,5 @@ seoInput.addEventListener("keydown", e => {
   }
 });
 
-// ✅ Startbericht in dezelfde stijl als floating versie
-appendMessage(
-  "Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?",
-  true
-);
+// Startbericht
+appendMessage("Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?", true);
