@@ -1,4 +1,4 @@
-// seo-script.js (met typindicator en correcte uitlijning)
+// seo-script.js (met typindicator fix + veilige link-rendering)
 const seoBot = document.querySelector("#seo-bot");
 
 seoBot.innerHTML = `
@@ -15,9 +15,37 @@ const seoSendBtn = seoBot.querySelector("button");
 
 let seoSessionId = Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9);
 
-// Typindicator aanmaken
-const typingIndicator = document.createElement("div");
+// ---------- Helpers: veilige link-rendering (Markdown + losse URLs) ----------
+function escapeHTML(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+function mdLinksToHTML(str) {
+  let html = escapeHTML(str);
+
+  // [label](https://...)
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener nofollow">$1</a>'
+  );
+
+  // losse URLs -> links (geen dubbele matches in attributes)
+  html = html.replace(/(?<!["'=\]])\bhttps?:\/\/[^\s<)]+/g, (url) =>
+    `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`
+  );
+
+  // nieuwe regels behouden
+  html = html.replace(/\n/g, "<br>");
+  return html;
+}
+
+// ---------- Typindicator ----------
+let typingIndicator = document.createElement("div");
 typingIndicator.className = "typing-indicator";
+typingIndicator.setAttribute("aria-live", "polite");
 typingIndicator.innerHTML = `
   <div class="dot"></div>
   <div class="dot"></div>
@@ -26,15 +54,24 @@ typingIndicator.innerHTML = `
 typingIndicator.style.display = "none";
 seoMessages.appendChild(typingIndicator);
 
+function ensureTypingIndicatorAtEnd() {
+  // zorg dat de indicator altijd als laatste in de lijst staat
+  if (typingIndicator.parentElement !== seoMessages) {
+    seoMessages.appendChild(typingIndicator);
+  } else if (seoMessages.lastElementChild !== typingIndicator) {
+    seoMessages.appendChild(typingIndicator);
+  }
+}
 function showTypingIndicator() {
+  ensureTypingIndicatorAtEnd();
   typingIndicator.style.display = "flex";
   seoMessages.scrollTop = seoMessages.scrollHeight;
 }
-
 function hideTypingIndicator() {
   typingIndicator.style.display = "none";
 }
 
+// ---------- Berichten ----------
 function appendMessage(text, fromBot = false) {
   const container = document.createElement("div");
   container.className = "bot-message-container";
@@ -48,10 +85,20 @@ function appendMessage(text, fromBot = false) {
 
   const msg = document.createElement("div");
   msg.className = `message ${fromBot ? "bot" : "user"}`;
-  msg.innerText = text;
+
+  if (fromBot) {
+    // BOT: klikbare links + veilige rendering
+    msg.innerHTML = mdLinksToHTML(text);
+  } else {
+    // USER: plain text (veilig)
+    msg.textContent = text;
+  }
+
+  // altijd vóór de typindicator invoegen zodat die onderaan blijft
+  ensureTypingIndicatorAtEnd();
+  seoMessages.insertBefore(container, typingIndicator);
   container.appendChild(msg);
 
-  seoMessages.insertBefore(container, typingIndicator);
   seoMessages.scrollTop = seoMessages.scrollHeight;
 }
 
@@ -71,28 +118,4 @@ function seoSendMessage() {
   })
     .then(async res => {
       try { return await res.json(); }
-      catch { return { reply: await res.text() }; }
-    })
-    .then(data => {
-      hideTypingIndicator();
-      appendMessage(
-        data.reply || data.answer || (data.messages && data.messages[0]?.text) || data.output || "Geen antwoord ontvangen.",
-        true
-      );
-    })
-    .catch(err => {
-      hideTypingIndicator();
-      console.error("Fout bij SEO-chat:", err);
-    });
-}
-
-seoSendBtn.addEventListener("click", seoSendMessage);
-seoInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    seoSendMessage();
-  }
-});
-
-// Startbericht
-appendMessage("Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?", true);
+      catch { return { reply:
