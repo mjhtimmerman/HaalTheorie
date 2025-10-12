@@ -8,6 +8,34 @@ const messages = document.querySelector(".chat-messages");
 
 let welcomeShown = false;
 
+// NEW — helpers voor veilige link-rendering (Markdown en losse URLs)
+function escapeHTML(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+function mdLinksToHTML(str) {
+  // 1) alles escapen
+  let html = escapeHTML(str);
+
+  // 2) markdown links: [tekst](https://...)
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener nofollow">$1</a>'
+  );
+
+  // 3) losse URLs klikbaar maken (skip already-in-attrs)
+  html = html.replace(/(?<!["'=\]])\bhttps?:\/\/[^\s<)]+/g, (url) =>
+    `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`
+  );
+
+  // 4) nieuwe regels behouden
+  html = html.replace(/\n/g, "<br>");
+  return html;
+}
+
 // Session ID genereren / hergebruiken
 let sessionId = localStorage.getItem("chatSessionId");
 if (!sessionId) {
@@ -68,7 +96,7 @@ function sendMessage() {
     // User message
     const userMsg = document.createElement("div");
     userMsg.className = "message user";
-    userMsg.innerText = text;
+    userMsg.innerText = text; // user blijft plain text (veilig)
     messages.appendChild(userMsg);
     messages.scrollTop = messages.scrollHeight;
 
@@ -103,13 +131,16 @@ function sendMessage() {
       const botMsg = document.createElement("div");
       botMsg.className = "message bot";
 
-      botMsg.innerText =
+      // NEW — raw string bepalen en veilig omzetten naar klikbare HTML
+      const raw =
         data.reply ||
         data.answer ||
         (data.messages && data.messages[0]?.text) ||
-        data.output || 
+        data.output ||
         (typeof data === "string" ? data : JSON.stringify(data)) ||
         "Geen antwoord ontvangen.";
+
+      botMsg.innerHTML = mdLinksToHTML(raw); // << klikbare links
 
       botContainer.appendChild(botAvatar);
       botContainer.appendChild(botMsg);
