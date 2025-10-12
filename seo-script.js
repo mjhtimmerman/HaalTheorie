@@ -118,4 +118,34 @@ function seoSendMessage() {
   })
     .then(async res => {
       try { return await res.json(); }
-      catch { return { reply:
+      catch { return { reply: await res.text() }; }
+    })
+    .then(data => {
+      hideTypingIndicator();
+
+      const raw =
+        data.reply ||
+        data.answer ||
+        (data.messages && data.messages[0]?.text) ||
+        data.output ||
+        "Geen antwoord ontvangen.";
+
+      appendMessage(raw, true);
+    })
+    .catch(err => {
+      hideTypingIndicator();
+      console.error("Fout bij SEO-chat:", err);
+      appendMessage("Er ging iets mis. Probeer het later nog eens.", true);
+    });
+}
+
+seoSendBtn.addEventListener("click", seoSendMessage);
+seoInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    seoSendMessage();
+  }
+});
+
+// Startbericht
+appendMessage("Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?", true);
