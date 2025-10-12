@@ -14,9 +14,7 @@
 }
 
 /* header uitgezet */
-#seo-bot .chat-header {
-  display: none;
-}
+#seo-bot .chat-header { display: none; }
 
 #seo-bot .chat-messages {
   flex: 1;
@@ -31,10 +29,11 @@
   display: flex;
   align-items: flex-end;
   gap: 10px;
+  width: 100%;
 }
 
 #seo-bot .bot-avatar {
-  width: 44px;   /* groter plaatje */
+  width: 44px;
   height: 44px;
   border-radius: 50%;
   flex-shrink: 0;
@@ -47,7 +46,7 @@
   padding: 12px 16px;
   border-radius: 16px 16px 16px 0;
   max-width: 75%;
-  font-size: 16px;   /* grotere tekst */
+  font-size: 16px;
   line-height: 1.5;
 }
 
@@ -58,10 +57,19 @@
   padding: 12px 16px;
   border-radius: 16px 16px 0 16px;
   max-width: 75%;
-  font-size: 16px;   /* grotere tekst */
+  font-size: 16px;
   line-height: 1.5;
 }
 
+/* NIEUW: klikbare links in bot messages */
+#seo-bot .message.bot a {
+  text-decoration: underline;
+  font-weight: 500;
+  word-break: break-word;
+}
+#seo-bot .message.bot a:hover { text-decoration: none; }
+
+/* inputbalk */
 #seo-bot .chat-input {
   padding: 12px;
   background: #fff;
@@ -97,17 +105,16 @@
   transition: background 0.2s;
   font-size: 16px;
 }
+#seo-bot .chat-input button:hover { background: #28a745; }
 
-#seo-bot .chat-input button:hover {
-  background: #28a745;
-}
-/* Typindicator */
+/* Typindicator (toon links met avatar-ruimte) */
 #seo-bot .typing-indicator {
   display: flex;
   gap: 4px;
   align-self: flex-start;
-  padding-left: 54px;
-  margin-bottom: 8px;
+  padding-left: 54px;   /* uitlijnen met bot-avatar */
+  margin: 2px 0 8px 0;
+  min-height: 16px;     /* zorgt dat hij zichtbaar ruimte heeft */
 }
 
 #seo-bot .typing-indicator .dot {
@@ -117,27 +124,14 @@
   border-radius: 50%;
   animation: blink 1.4s infinite both;
 }
-
-#seo-bot .typing-indicator .dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-#seo-bot .typing-indicator .dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
+#seo-bot .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+#seo-bot .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes blink {
   0%, 80%, 100% { opacity: 0.3; }
   40% { opacity: 1; }
 }
 
-/* Zorg dat user messages rechts uitgelijnd staan */
-#seo-bot .bot-message-container {
-  width: 100%;
-}
-#seo-bot .message.user {
-  margin-left: auto;
-}
-#seo-bot .message.bot {
-  margin-right: auto;
-}
-
+/* rechts/links uitlijning */
+#seo-bot .message.user { margin-left: auto; }
+#seo-bot .message.bot { margin-right: auto; }
