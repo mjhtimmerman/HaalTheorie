@@ -210,3 +210,24 @@ body {
   50%  { opacity: 0.3; transform: translateY(0px); }
   100% { opacity: 0.3; transform: translateY(0px); }
 }
+.chat-intro-bubble {
+  position: relative;
+}
+
+.chat-intro-bubble .close-intro {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.8;
+  line-height: 1;
+}
+
+.chat-intro-bubble .close-intro:hover {
+  opacity: 1;
+}
+
