@@ -73,7 +73,7 @@ function openChat() {
 
     const botMsg = document.createElement("div");
     botMsg.className = "message bot";
-    botMsg.innerText = "Nawfal van HaalTheorie hier 👋 Waar kan ik je mee helpen?";
+    botMsg.innerText = "Nawfal hier 👋 Waar kan ik je mee helpen?";
 
     botContainer.appendChild(botAvatar);
     botContainer.appendChild(botMsg);
