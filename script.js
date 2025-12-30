@@ -161,3 +161,12 @@ input.addEventListener("keydown", function(e) {
     sendMessage();
   }
 });
+const closeIntroBtn = document.querySelector(".close-intro");
+
+if (closeIntroBtn) {
+  closeIntroBtn.addEventListener("click", () => {
+    introBubble.style.display = "none";
+    localStorage.setItem("introDismissed", "true");
+  });
+}
+
