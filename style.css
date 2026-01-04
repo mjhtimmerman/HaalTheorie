@@ -40,6 +40,9 @@ body {
   max-width: 240px;
   font-weight: 500;
   animation: fadeIn 0.3s ease-out;
+  position: relative;
+  padding: 10px 44px 10px 14px; /* rechts 44px zodat tekst nooit onder het kruisje komt */
+  border-radius: 14px 14px 0 14px; /* rechtsonder recht */
 }
 
 @keyframes fadeIn {
