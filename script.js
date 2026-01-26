@@ -61,7 +61,9 @@ function hideTypingIndicator() {
 
 function openChat() {
   chatWindow.style.display = "flex";
-  introBubble.style.display = "none";
+
+  // introBubble bestaat niet meer → veilig afhandelen
+  if (introBubble) introBubble.style.display = "none";
 
   if (!welcomeShown) {
     const botContainer = document.createElement("div");
@@ -165,8 +167,9 @@ const closeIntroBtn = document.querySelector(".close-intro");
 
 if (closeIntroBtn) {
   closeIntroBtn.addEventListener("click", () => {
-    introBubble.style.display = "none";
+    if (introBubble) introBubble.style.display = "none";
     localStorage.setItem("introDismissed", "true");
   });
 }
+
 
