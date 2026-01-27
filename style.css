@@ -232,4 +232,14 @@ body {
 .chat-intro-bubble .close-intro:hover {
   opacity: 1;
 }
+/* ---------- Mobile: hide intro bubble ---------- */
+@media (max-width: 768px) {
+  .chat-intro-bubble {
+    display: none !important;
+  }
+
+  .chat-launcher-container {
+    gap: 0;
+  }
+}
 
