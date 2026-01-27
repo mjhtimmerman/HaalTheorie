@@ -5,6 +5,7 @@ const closeBtn = document.querySelector(".close-chat");
 const sendBtn = document.querySelector(".chat-input button");
 const input = document.querySelector(".chat-input textarea");
 const messages = document.querySelector(".chat-messages");
+const WEBHOOK_SECRET = "mccmurWaT5p4MsZNXwm2N32N5mQ5nNwno92tVbz5egD0EZ2ZkexcEhLUTJrp4XY7b";
 
 let welcomeShown = false;
 
@@ -108,7 +109,9 @@ function sendMessage() {
     // POST naar n8n webhook inclusief sessionId
     fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", 
+                "X-Webhook-Secret": "WEBHOOK_SECRET" 
+               },
       body: JSON.stringify({ message: text, sessionId: sessionId })
     })
     .then(async res => {
