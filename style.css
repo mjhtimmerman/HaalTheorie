@@ -242,4 +242,10 @@ body {
     gap: 0;
   }
 }
+.message.user,
+.message.bot {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 
