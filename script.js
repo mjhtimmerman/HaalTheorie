@@ -82,10 +82,9 @@ function mdLinksToHTML(str) {
   return html;
 }
 
-// If disabled: hide launcher/window and do not attach listeners
 if (shouldDisableChatOnThisPage()) {
   const applyHide = () => {
-    // CSS kill-switch (overschrijft latere CSS/JS toggles)
+    // CSS kill-switch
     if (!document.getElementById("ht-hide-chat-css")) {
       const style = document.createElement("style");
       style.id = "ht-hide-chat-css";
@@ -102,23 +101,45 @@ if (shouldDisableChatOnThisPage()) {
       document.head.appendChild(style);
     }
 
-    // Inline fallback met priority
+    // Inline enforcer
     document.querySelector(".chat-launcher-container")?.style.setProperty("display", "none", "important");
     document.querySelector(".chat-launcher")?.style.setProperty("display", "none", "important");
     document.querySelector(".chat-window")?.style.setProperty("display", "none", "important");
     document.querySelector(".chat-intro-bubble")?.style.setProperty("display", "none", "important");
   };
 
-  // direct + na load
-  applyHide();
-  window.addEventListener("load", applyHide);
+  const boot = () => {
+    applyHide();
 
-  // SPA / late DOM inject: blijf afdwingen
+    // korte “enforcer window” voor late re-renders/toggles
+    const start = Date.now();
+    const timer = setInterval(() => {
+      applyHide();
+      if (Date.now() - start > 10000) clearInterval(timer); // 10s
+    }, 250);
+  };
+
+  // init
+  boot();
+
+  // SPA navigatie hooks
+  window.addEventListener("load", boot);
+  window.addEventListener("popstate", boot);
+
+  const _push = history.pushState;
+  history.pushState = function () { _push.apply(this, arguments); boot(); };
+
+  const _replace = history.replaceState;
+  history.replaceState = function () { _replace.apply(this, arguments); boot(); };
+
+  // DOM inject observer (als extra vangnet)
   const obs = new MutationObserver(applyHide);
   obs.observe(document.documentElement, { childList: true, subtree: true });
 
-  // stop na 30s om overhead te beperken
-  setTimeout(() => obs.disconnect(), 30000);
+  // optioneel: disconnect na 60s (als je overhead wil limiteren)
+  setTimeout(() => obs.disconnect(), 60000);
+} else {
+  // ... jouw bestaande else code
 } else {
   // ... jouw bestaande else code blijft exact hetzelfde
 
