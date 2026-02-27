@@ -9,6 +9,51 @@ const WEBHOOK_SECRET = "mccmurWaT5p4MsZNXwm2N32N5mQ5nNwno92tVbz5egD0EZ2ZkexcEhLU
 
 let welcomeShown = false;
 
+/** NEW — disable chat on LearnWorlds course player pages */
+function shouldDisableChatOnThisPage() {
+  const path = location.pathname.toLowerCase();
+  const qs = location.search.toLowerCase();
+
+  // LearnWorlds path player
+  if (path.includes("path-player")) return true;
+
+  // Extra safety: course context in query
+  if (qs.includes("courseid=") && qs.includes("unit=")) return true;
+
+  return false;
+}
+
+/** NEW — persistent visitor id (browser/device scope) */
+function getVisitorId() {
+  const KEY = "ht_visitor_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = (crypto?.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+/** NEW — LearnWorlds identity (email) if present */
+function getUserEmail() {
+  const el = document.querySelector("#lw-identity");
+  const email = el?.dataset?.email?.trim();
+  return email || null;
+}
+
+/** NEW — device info for debugging + analytics */
+function getDeviceType() {
+  const w = Math.min(window.innerWidth, window.screen?.width || window.innerWidth);
+  if (w <= 767) return "mobile";
+  if (w <= 1024) return "tablet";
+  return "desktop";
+}
+function isTouchDevice() {
+  return ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+}
+
 // NEW — helpers voor veilige link-rendering (Markdown en losse URLs)
 function escapeHTML(str) {
   return String(str)
@@ -37,95 +82,44 @@ function mdLinksToHTML(str) {
   return html;
 }
 
-// Session ID genereren / hergebruiken
-let sessionId = localStorage.getItem("chatSessionId");
-if (!sessionId) {
-  sessionId = Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9);
-  localStorage.setItem("chatSessionId", sessionId);
-}
+// If disabled: hide launcher/window and do not attach listeners
+if (shouldDisableChatOnThisPage()) {
+  const launcherContainer = document.querySelector(".chat-launcher-container");
+  const chatWindowEl = document.querySelector(".chat-window");
+  if (launcherContainer) launcherContainer.style.display = "none";
+  if (chatWindowEl) chatWindowEl.style.display = "none";
+} else {
 
-// Typing indicator element
-const typingIndicator = document.createElement("div");
-typingIndicator.className = "typing-indicator";
-typingIndicator.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-
-function showTypingIndicator() {
-  // verwijder eerst als er al een indicator bestaat
-  if (typingIndicator.parentElement) typingIndicator.remove();
-  messages.appendChild(typingIndicator);
-  typingIndicator.style.display = "inline-block";
-  messages.scrollTop = messages.scrollHeight;
-}
-function hideTypingIndicator() {
-  typingIndicator.style.display = "none";
-}
-
-function openChat() {
-  chatWindow.style.display = "flex";
-
-  // introBubble bestaat niet meer → veilig afhandelen
-  if (introBubble) introBubble.style.display = "none";
-
-  if (!welcomeShown) {
-    const botContainer = document.createElement("div");
-    botContainer.className = "bot-message-container";
-
-    const botAvatar = document.createElement("img");
-    botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
-    botAvatar.className = "bot-avatar";
-
-    const botMsg = document.createElement("div");
-    botMsg.className = "message bot";
-    botMsg.innerText = "Nawfal hier 👋 Waar kan ik je mee helpen?";
-
-    botContainer.appendChild(botAvatar);
-    botContainer.appendChild(botMsg);
-    messages.appendChild(botContainer);
-    messages.scrollTop = messages.scrollHeight;
-
-    welcomeShown = true;
+  // Session ID genereren / hergebruiken
+  let sessionId = localStorage.getItem("chatSessionId");
+  if (!sessionId) {
+    sessionId = Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("chatSessionId", sessionId);
   }
-}
 
-function closeChat() {
-  chatWindow.style.display = "none";
-}
-launcher.addEventListener("click", openChat);
-closeBtn.addEventListener("click", closeChat);
+  // Typing indicator element
+  const typingIndicator = document.createElement("div");
+  typingIndicator.className = "typing-indicator";
+  typingIndicator.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
 
-function sendMessage() {
-  const text = input.value.trim();
-  if (text !== "") {
-    // User message
-    const userMsg = document.createElement("div");
-    userMsg.className = "message user";
-    userMsg.innerText = text; // user blijft plain text (veilig)
-    messages.appendChild(userMsg);
+  function showTypingIndicator() {
+    // verwijder eerst als er al een indicator bestaat
+    if (typingIndicator.parentElement) typingIndicator.remove();
+    messages.appendChild(typingIndicator);
+    typingIndicator.style.display = "inline-block";
     messages.scrollTop = messages.scrollHeight;
+  }
+  function hideTypingIndicator() {
+    typingIndicator.style.display = "none";
+  }
 
-    // Typing indicator na 0.2s tonen
-    setTimeout(showTypingIndicator, 200);
+  function openChat() {
+    chatWindow.style.display = "flex";
 
-    // POST naar n8n webhook inclusief sessionId
-    fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", 
-                "X-Webhook-Secret": "WEBHOOK_SECRET" 
-               },
-      body: JSON.stringify({ message: text, sessionId: sessionId })
-    })
-    .then(async res => {
-      try {
-        return await res.json();
-      } catch {
-        const txt = await res.text();
-        return { reply: txt };
-      }
-    })
-    .then(data => {
-      // Typing indicator verbergen zodra antwoord binnenkomt
-      hideTypingIndicator();
+    // introBubble bestaat niet meer → veilig afhandelen
+    if (introBubble) introBubble.style.display = "none";
 
+    if (!welcomeShown) {
       const botContainer = document.createElement("div");
       botContainer.className = "bot-message-container";
 
@@ -135,44 +129,126 @@ function sendMessage() {
 
       const botMsg = document.createElement("div");
       botMsg.className = "message bot";
-
-      // NEW — raw string bepalen en veilig omzetten naar klikbare HTML
-      const raw =
-        data.reply ||
-        data.answer ||
-        (data.messages && data.messages[0]?.text) ||
-        data.output ||
-        (typeof data === "string" ? data : JSON.stringify(data)) ||
-        "Geen antwoord ontvangen.";
-
-      botMsg.innerHTML = mdLinksToHTML(raw); // << klikbare links
+      botMsg.innerText = "Nawfal hier 👋 Waar kan ik je mee helpen?";
 
       botContainer.appendChild(botAvatar);
       botContainer.appendChild(botMsg);
       messages.appendChild(botContainer);
       messages.scrollTop = messages.scrollHeight;
-    })
-    .catch(err => console.error("Fout bij ophalen:", err));
 
-    input.value = "";
+      welcomeShown = true;
+    }
   }
-}
 
-sendBtn.addEventListener("click", sendMessage);
-
-input.addEventListener("keydown", function(e) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
+  function closeChat() {
+    chatWindow.style.display = "none";
   }
-});
-const closeIntroBtn = document.querySelector(".close-intro");
 
-if (closeIntroBtn) {
-  closeIntroBtn.addEventListener("click", () => {
-    if (introBubble) introBubble.style.display = "none";
-    localStorage.setItem("introDismissed", "true");
+  launcher.addEventListener("click", openChat);
+  closeBtn.addEventListener("click", closeChat);
+
+  function sendMessage() {
+    const text = input.value.trim();
+    if (text !== "") {
+      // User message
+      const userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.innerText = text; // user blijft plain text (veilig)
+      messages.appendChild(userMsg);
+      messages.scrollTop = messages.scrollHeight;
+
+      // Typing indicator na 0.2s tonen
+      setTimeout(showTypingIndicator, 200);
+
+      // NEW — collect identity + device info (non-breaking)
+      const visitorId = getVisitorId();
+      const userEmail = getUserEmail();
+      const deviceType = getDeviceType();
+      const touch = isTouchDevice();
+
+      // POST naar n8n webhook inclusief sessionId (+ metadata)
+      fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Secret": "WEBHOOK_SECRET"
+        },
+        body: JSON.stringify({
+          message: text,
+          sessionId: sessionId,
+
+          // NEW — identifiers
+          visitorId: visitorId,
+          userEmail: userEmail,
+          userKeyType: userEmail ? "email" : null,
+
+          // NEW — device/page context
+          deviceType: deviceType,
+          isTouch: touch,
+          userAgent: navigator.userAgent,
+          pagePath: location.pathname,
+          pageHref: location.href
+        })
+      })
+      .then(async res => {
+        try {
+          return await res.json();
+        } catch {
+          const txt = await res.text();
+          return { reply: txt };
+        }
+      })
+      .then(data => {
+        // Typing indicator verbergen zodra antwoord binnenkomt
+        hideTypingIndicator();
+
+        const botContainer = document.createElement("div");
+        botContainer.className = "bot-message-container";
+
+        const botAvatar = document.createElement("img");
+        botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
+        botAvatar.className = "bot-avatar";
+
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+
+        // NEW — raw string bepalen en veilig omzetten naar klikbare HTML
+        const raw =
+          data.reply ||
+          data.answer ||
+          (data.messages && data.messages[0]?.text) ||
+          data.output ||
+          (typeof data === "string" ? data : JSON.stringify(data)) ||
+          "Geen antwoord ontvangen.";
+
+        botMsg.innerHTML = mdLinksToHTML(raw); // << klikbare links
+
+        botContainer.appendChild(botAvatar);
+        botContainer.appendChild(botMsg);
+        messages.appendChild(botContainer);
+        messages.scrollTop = messages.scrollHeight;
+      })
+      .catch(err => console.error("Fout bij ophalen:", err));
+
+      input.value = "";
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   });
+
+  const closeIntroBtn = document.querySelector(".close-intro");
+
+  if (closeIntroBtn) {
+    closeIntroBtn.addEventListener("click", () => {
+      if (introBubble) introBubble.style.display = "none";
+      localStorage.setItem("introDismissed", "true");
+    });
+  }
 }
-
-
