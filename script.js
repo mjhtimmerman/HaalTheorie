@@ -84,29 +84,43 @@ function mdLinksToHTML(str) {
 
 // If disabled: hide launcher/window and do not attach listeners
 if (shouldDisableChatOnThisPage()) {
-  const hideChatUI = () => {
-    const launcherContainer = document.querySelector(".chat-launcher-container");
-    const launcherEl = document.querySelector(".chat-launcher");
-    const chatWindowEl = document.querySelector(".chat-window");
-    const introBubbleEl = document.querySelector(".chat-intro-bubble");
+  const applyHide = () => {
+    // CSS kill-switch (overschrijft latere CSS/JS toggles)
+    if (!document.getElementById("ht-hide-chat-css")) {
+      const style = document.createElement("style");
+      style.id = "ht-hide-chat-css";
+      style.textContent = `
+        .chat-launcher-container,
+        .chat-launcher,
+        .chat-window,
+        .chat-intro-bubble {
+          display: none !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
-    if (launcherContainer) launcherContainer.style.display = "none";
-    if (launcherEl) launcherEl.style.display = "none";
-    if (chatWindowEl) chatWindowEl.style.display = "none";
-    if (introBubbleEl) introBubbleEl.style.display = "none";
+    // Inline fallback met priority
+    document.querySelector(".chat-launcher-container")?.style.setProperty("display", "none", "important");
+    document.querySelector(".chat-launcher")?.style.setProperty("display", "none", "important");
+    document.querySelector(".chat-window")?.style.setProperty("display", "none", "important");
+    document.querySelector(".chat-intro-bubble")?.style.setProperty("display", "none", "important");
   };
 
-  // direct proberen
-  hideChatUI();
+  // direct + na load
+  applyHide();
+  window.addEventListener("load", applyHide);
 
-  // en nogmaals na load + korte delays (voor SPA / late DOM inject)
-  window.addEventListener("load", () => {
-    hideChatUI();
-    setTimeout(hideChatUI, 200);
-    setTimeout(hideChatUI, 800);
-    setTimeout(hideChatUI, 2000);
-  });
+  // SPA / late DOM inject: blijf afdwingen
+  const obs = new MutationObserver(applyHide);
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+
+  // stop na 30s om overhead te beperken
+  setTimeout(() => obs.disconnect(), 30000);
 } else {
+  // ... jouw bestaande else code blijft exact hetzelfde
 
   // Session ID genereren / hergebruiken
   let sessionId = localStorage.getItem("chatSessionId");
