@@ -86,9 +86,14 @@ function mdLinksToHTML(str) {
 if (shouldDisableChatOnThisPage()) {
   const hideChatUI = () => {
     const launcherContainer = document.querySelector(".chat-launcher-container");
+    const launcherEl = document.querySelector(".chat-launcher");
     const chatWindowEl = document.querySelector(".chat-window");
+    const introBubbleEl = document.querySelector(".chat-intro-bubble");
+
     if (launcherContainer) launcherContainer.style.display = "none";
+    if (launcherEl) launcherEl.style.display = "none";
     if (chatWindowEl) chatWindowEl.style.display = "none";
+    if (introBubbleEl) introBubbleEl.style.display = "none";
   };
 
   // direct proberen
@@ -184,6 +189,7 @@ if (shouldDisableChatOnThisPage()) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          // Let op: als je de constante wil sturen, haal de quotes weg.
           "X-Webhook-Secret": "WEBHOOK_SECRET"
         },
         body: JSON.stringify({
