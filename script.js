@@ -1,29 +1,25 @@
-const launcher = document.querySelector(".chat-launcher");
-const introBubble = document.querySelector(".chat-intro-bubble");
-const chatWindow = document.querySelector(".chat-window");
-const closeBtn = document.querySelector(".close-chat");
-const sendBtn = document.querySelector(".chat-input button");
-const input = document.querySelector(".chat-input textarea");
-const messages = document.querySelector(".chat-messages");
-const WEBHOOK_SECRET = "mccmurWaT5p4MsZNXwm2N32N5mQ5nNwno92tVbz5egD0EZ2ZkexcEhLUTJrp4XY7b";
+// ----------------------------
+// HaalTheorie Chat Widget Script
+// - Verbergt chat op LearnWorlds course player (path-player / courseid+unit / playerFrame)
+// - SPA-proof: root class + !important CSS + history hooks + MutationObserver
+// - Webhook secret header verwijderd (wordt niet gecontroleerd)
+// ----------------------------
 
+// ---- helpers / selectors (alleen declaraties; query's doen we in init) ----
 let welcomeShown = false;
 
-/** NEW — disable chat on LearnWorlds course player pages */
+// Disable chat on LearnWorlds course player pages
 function shouldDisableChatOnThisPage() {
   const path = location.pathname.toLowerCase();
   const qs = location.search.toLowerCase();
 
-  // LearnWorlds path player
   if (path.includes("path-player")) return true;
-
-  // Extra safety: course context in query
   if (qs.includes("courseid=") && qs.includes("unit=")) return true;
 
   return false;
 }
 
-/** NEW — persistent visitor id (browser/device scope) */
+// persistent visitor id (browser/device scope)
 function getVisitorId() {
   const KEY = "ht_visitor_id";
   let id = localStorage.getItem(KEY);
@@ -36,14 +32,14 @@ function getVisitorId() {
   return id;
 }
 
-/** NEW — LearnWorlds identity (email) if present */
+// LearnWorlds identity (email) if present
 function getUserEmail() {
   const el = document.querySelector("#lw-identity");
   const email = el?.dataset?.email?.trim();
   return email || null;
 }
 
-/** NEW — device info for debugging + analytics */
+// device info
 function getDeviceType() {
   const w = Math.min(window.innerWidth, window.screen?.width || window.innerWidth);
   if (w <= 767) return "mobile";
@@ -54,7 +50,7 @@ function isTouchDevice() {
   return ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
 }
 
-// NEW — helpers voor veilige link-rendering (Markdown en losse URLs)
+// safe link rendering (Markdown + raw URLs)
 function escapeHTML(str) {
   return String(str)
     .replaceAll("&", "&amp;")
@@ -64,84 +60,70 @@ function escapeHTML(str) {
     .replaceAll("'", "&#39;");
 }
 function mdLinksToHTML(str) {
-  // 1) alles escapen
   let html = escapeHTML(str);
 
-  // 2) markdown links: [tekst](https://...)
-  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+  // markdown links: [text](https://...)
+  html = html.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener nofollow">$1</a>'
   );
 
-  // 3) losse URLs klikbaar maken (skip already-in-attrs)
+  // raw URLs
   html = html.replace(/(?<!["'=\]])\bhttps?:\/\/[^\s<)]+/g, (url) =>
     `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`
   );
 
-  // 4) nieuwe regels behouden
   html = html.replace(/\n/g, "<br>");
   return html;
 }
 
-if (shouldDisableChatOnThisPage()) {
-  const applyHide = () => {
-    // CSS kill-switch
-    if (!document.getElementById("ht-hide-chat-css")) {
-      const style = document.createElement("style");
-      style.id = "ht-hide-chat-css";
-      style.textContent = `
-        .chat-launcher-container,
-        .chat-launcher,
-        .chat-window,
-        .chat-intro-bubble {
-          display: none !important;
-          visibility: hidden !important;
-          pointer-events: none !important;
-        }
-      `;
-      document.head.appendChild(style);
+// ---- hide-mode (course pages) ----
+const HIDE_CLASS = "ht-hide-chat";
+const HIDE_STYLE_ID = "ht-hide-chat-css";
+
+function ensureHideCSS() {
+  if (document.getElementById(HIDE_STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = HIDE_STYLE_ID;
+  style.textContent = `
+    .${HIDE_CLASS} .chat-launcher-container,
+    .${HIDE_CLASS} .chat-launcher,
+    .${HIDE_CLASS} .chat-window,
+    .${HIDE_CLASS} .chat-intro-bubble {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
     }
+  `;
+  document.head.appendChild(style);
+}
 
-    // Inline enforcer
-    document.querySelector(".chat-launcher-container")?.style.setProperty("display", "none", "important");
-    document.querySelector(".chat-launcher")?.style.setProperty("display", "none", "important");
-    document.querySelector(".chat-window")?.style.setProperty("display", "none", "important");
-    document.querySelector(".chat-intro-bubble")?.style.setProperty("display", "none", "important");
-  };
+function enableHideMode() {
+  ensureHideCSS();
+  document.documentElement.classList.add(HIDE_CLASS);
+}
 
-  const boot = () => {
-    applyHide();
+function disableHideMode() {
+  document.documentElement.classList.remove(HIDE_CLASS);
+}
 
-    // korte “enforcer window” voor late re-renders/toggles
-    const start = Date.now();
-    const timer = setInterval(() => {
-      applyHide();
-      if (Date.now() - start > 10000) clearInterval(timer); // 10s
-    }, 250);
-  };
+// ---- chat init (non-course pages) ----
+let chatInitialized = false;
 
-  // init
-  boot();
+function initChatIfNeeded() {
+  if (chatInitialized) return;
 
-  // SPA navigatie hooks
-  window.addEventListener("load", boot);
-  window.addEventListener("popstate", boot);
+  const launcher = document.querySelector(".chat-launcher");
+  const introBubble = document.querySelector(".chat-intro-bubble");
+  const chatWindow = document.querySelector(".chat-window");
+  const closeBtn = document.querySelector(".close-chat");
+  const sendBtn = document.querySelector(".chat-input button");
+  const input = document.querySelector(".chat-input textarea");
+  const messages = document.querySelector(".chat-messages");
 
-  const _push = history.pushState;
-  history.pushState = function () { _push.apply(this, arguments); boot(); };
-
-  const _replace = history.replaceState;
-  history.replaceState = function () { _replace.apply(this, arguments); boot(); };
-
-  // DOM inject observer (als extra vangnet)
-  const obs = new MutationObserver(applyHide);
-  obs.observe(document.documentElement, { childList: true, subtree: true });
-
-  // optioneel: disconnect na 60s (als je overhead wil limiteren)
-  setTimeout(() => obs.disconnect(), 60000);
-} else {
-  // ... jouw bestaande else code
-} else {
-  // ... jouw bestaande else code blijft exact hetzelfde
+  // Als de UI nog niet in de DOM zit (late inject), dan later opnieuw proberen via boot()
+  if (!launcher || !chatWindow || !closeBtn || !sendBtn || !input || !messages) return;
 
   // Session ID genereren / hergebruiken
   let sessionId = localStorage.getItem("chatSessionId");
@@ -150,13 +132,12 @@ if (shouldDisableChatOnThisPage()) {
     localStorage.setItem("chatSessionId", sessionId);
   }
 
-  // Typing indicator element
+  // Typing indicator
   const typingIndicator = document.createElement("div");
   typingIndicator.className = "typing-indicator";
   typingIndicator.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
 
   function showTypingIndicator() {
-    // verwijder eerst als er al een indicator bestaat
     if (typingIndicator.parentElement) typingIndicator.remove();
     messages.appendChild(typingIndicator);
     typingIndicator.style.display = "inline-block";
@@ -168,8 +149,6 @@ if (shouldDisableChatOnThisPage()) {
 
   function openChat() {
     chatWindow.style.display = "flex";
-
-    // introBubble bestaat niet meer → veilig afhandelen
     if (introBubble) introBubble.style.display = "none";
 
     if (!welcomeShown) {
@@ -202,94 +181,84 @@ if (shouldDisableChatOnThisPage()) {
 
   function sendMessage() {
     const text = input.value.trim();
-    if (text !== "") {
-      // User message
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user";
-      userMsg.innerText = text; // user blijft plain text (veilig)
-      messages.appendChild(userMsg);
+    if (!text) return;
+
+    // User message
+    const userMsg = document.createElement("div");
+    userMsg.className = "message user";
+    userMsg.innerText = text;
+    messages.appendChild(userMsg);
+    messages.scrollTop = messages.scrollHeight;
+
+    setTimeout(showTypingIndicator, 200);
+
+    const visitorId = getVisitorId();
+    const userEmail = getUserEmail();
+    const deviceType = getDeviceType();
+    const touch = isTouchDevice();
+
+    fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        sessionId: sessionId,
+
+        // identifiers
+        visitorId: visitorId,
+        userEmail: userEmail,
+        userKeyType: userEmail ? "email" : null,
+
+        // device/page context
+        deviceType: deviceType,
+        isTouch: touch,
+        userAgent: navigator.userAgent,
+        pagePath: location.pathname,
+        pageHref: location.href
+      })
+    })
+    .then(async res => {
+      try {
+        return await res.json();
+      } catch {
+        const txt = await res.text();
+        return { reply: txt };
+      }
+    })
+    .then(data => {
+      hideTypingIndicator();
+
+      const botContainer = document.createElement("div");
+      botContainer.className = "bot-message-container";
+
+      const botAvatar = document.createElement("img");
+      botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
+      botAvatar.className = "bot-avatar";
+
+      const botMsg = document.createElement("div");
+      botMsg.className = "message bot";
+
+      const raw =
+        data.reply ||
+        data.answer ||
+        (data.messages && data.messages[0]?.text) ||
+        data.output ||
+        (typeof data === "string" ? data : JSON.stringify(data)) ||
+        "Geen antwoord ontvangen.";
+
+      botMsg.innerHTML = mdLinksToHTML(raw);
+
+      botContainer.appendChild(botAvatar);
+      botContainer.appendChild(botMsg);
+      messages.appendChild(botContainer);
       messages.scrollTop = messages.scrollHeight;
+    })
+    .catch(err => console.error("Fout bij ophalen:", err));
 
-      // Typing indicator na 0.2s tonen
-      setTimeout(showTypingIndicator, 200);
-
-      // NEW — collect identity + device info (non-breaking)
-      const visitorId = getVisitorId();
-      const userEmail = getUserEmail();
-      const deviceType = getDeviceType();
-      const touch = isTouchDevice();
-
-      // POST naar n8n webhook inclusief sessionId (+ metadata)
-      fetch("https://haaltheorie.app.n8n.cloud/webhook/17025913-81df-4927-882d-9eeb1373d686/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Let op: als je de constante wil sturen, haal de quotes weg.
-          "X-Webhook-Secret": "WEBHOOK_SECRET"
-        },
-        body: JSON.stringify({
-          message: text,
-          sessionId: sessionId,
-
-          // NEW — identifiers
-          visitorId: visitorId,
-          userEmail: userEmail,
-          userKeyType: userEmail ? "email" : null,
-
-          // NEW — device/page context
-          deviceType: deviceType,
-          isTouch: touch,
-          userAgent: navigator.userAgent,
-          pagePath: location.pathname,
-          pageHref: location.href
-        })
-      })
-      .then(async res => {
-        try {
-          return await res.json();
-        } catch {
-          const txt = await res.text();
-          return { reply: txt };
-        }
-      })
-      .then(data => {
-        // Typing indicator verbergen zodra antwoord binnenkomt
-        hideTypingIndicator();
-
-        const botContainer = document.createElement("div");
-        botContainer.className = "bot-message-container";
-
-        const botAvatar = document.createElement("img");
-        botAvatar.src = "https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/Trengo%20Widget.png";
-        botAvatar.className = "bot-avatar";
-
-        const botMsg = document.createElement("div");
-        botMsg.className = "message bot";
-
-        // NEW — raw string bepalen en veilig omzetten naar klikbare HTML
-        const raw =
-          data.reply ||
-          data.answer ||
-          (data.messages && data.messages[0]?.text) ||
-          data.output ||
-          (typeof data === "string" ? data : JSON.stringify(data)) ||
-          "Geen antwoord ontvangen.";
-
-        botMsg.innerHTML = mdLinksToHTML(raw); // << klikbare links
-
-        botContainer.appendChild(botAvatar);
-        botContainer.appendChild(botMsg);
-        messages.appendChild(botContainer);
-        messages.scrollTop = messages.scrollHeight;
-      })
-      .catch(err => console.error("Fout bij ophalen:", err));
-
-      input.value = "";
-    }
+    input.value = "";
   }
 
   sendBtn.addEventListener("click", sendMessage);
-
   input.addEventListener("keydown", function(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -298,11 +267,48 @@ if (shouldDisableChatOnThisPage()) {
   });
 
   const closeIntroBtn = document.querySelector(".close-intro");
-
   if (closeIntroBtn) {
     closeIntroBtn.addEventListener("click", () => {
       if (introBubble) introBubble.style.display = "none";
       localStorage.setItem("introDismissed", "true");
     });
   }
+
+  chatInitialized = true;
 }
+
+// ---- SPA boot logic ----
+function isCourseContext() {
+  // shouldDisableChatOnThisPage() dekt URL, playerFrame dekt LearnWorlds iframe player
+  return shouldDisableChatOnThisPage() || !!document.getElementById("playerFrame");
+}
+
+function boot() {
+  if (isCourseContext()) {
+    enableHideMode();
+  } else {
+    disableHideMode();
+    initChatIfNeeded(); // init pas op niet-course pagina's
+  }
+}
+
+// init
+boot();
+
+// triggers
+window.addEventListener("load", boot);
+window.addEventListener("popstate", boot);
+
+// history hooks (SPA)
+const _push = history.pushState;
+history.pushState = function () { _push.apply(this, arguments); boot(); };
+
+const _replace = history.replaceState;
+history.replaceState = function () { _replace.apply(this, arguments); boot(); };
+
+// observe DOM changes (late inject)
+const obs = new MutationObserver(boot);
+obs.observe(document.documentElement, { childList: true, subtree: true });
+
+// (optioneel) disconnect na 2 minuten om overhead te limiteren
+setTimeout(() => obs.disconnect(), 120000);
