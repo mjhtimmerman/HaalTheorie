@@ -84,10 +84,23 @@ function mdLinksToHTML(str) {
 
 // If disabled: hide launcher/window and do not attach listeners
 if (shouldDisableChatOnThisPage()) {
-  const launcherContainer = document.querySelector(".chat-launcher-container");
-  const chatWindowEl = document.querySelector(".chat-window");
-  if (launcherContainer) launcherContainer.style.display = "none";
-  if (chatWindowEl) chatWindowEl.style.display = "none";
+  const hideChatUI = () => {
+    const launcherContainer = document.querySelector(".chat-launcher-container");
+    const chatWindowEl = document.querySelector(".chat-window");
+    if (launcherContainer) launcherContainer.style.display = "none";
+    if (chatWindowEl) chatWindowEl.style.display = "none";
+  };
+
+  // direct proberen
+  hideChatUI();
+
+  // en nogmaals na load + korte delays (voor SPA / late DOM inject)
+  window.addEventListener("load", () => {
+    hideChatUI();
+    setTimeout(hideChatUI, 200);
+    setTimeout(hideChatUI, 800);
+    setTimeout(hideChatUI, 2000);
+  });
 } else {
 
   // Session ID genereren / hergebruiken
