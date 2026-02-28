@@ -12,10 +12,23 @@ let chatInitialized = false;
 // ----------------------------
 function shouldEnableChatOnThisPage() {
   const path = location.pathname.toLowerCase();
+  const qs = location.search.toLowerCase();
 
+  // HARD BLOCK: course player / lesson player
+  if (path.includes("path-player")) return false;
+  if (qs.includes("courseid=") && qs.includes("unit=")) return false;
+
+  // BLOCK: blog
+  if (path === "/blog" || path.startsWith("/blog/")) return false;
+
+  // ALLOW: basis + pages
+  if (path === "/") return true;
+  if (path === "/home") return true;
   if (path === "/start") return true;
-  if (path === "/blog" || path.startsWith("/blog/")) return true;
-  if (path === "/verkeersborden" || path.startsWith("/verkeersborden/")) return true;
+  if (path === "/courses" || path.startsWith("/courses/")) return true;
+
+  return false;
+}
 
   return false;
 }
