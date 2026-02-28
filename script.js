@@ -30,9 +30,6 @@ function shouldEnableChatOnThisPage() {
   return false;
 }
 
-  return false;
-}
-
 // ----------------------------
 // 2) OPTIONAL ID/DEVICE HELPERS
 // ----------------------------
