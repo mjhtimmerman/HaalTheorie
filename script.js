@@ -1,25 +1,28 @@
 // ----------------------------
-// HaalTheorie Chat Widget Script
-// - Verbergt chat op LearnWorlds course player (path-player / courseid+unit / playerFrame)
-// - SPA-proof: root class + !important CSS + history hooks + MutationObserver
-// - Webhook secret header verwijderd (wordt niet gecontroleerd)
+// HaalTheorie Chat Widget (DOM INJECT + WHITELIST)
+// Alleen chat op: /start, /blog*, /verkeersborden*
+// Overal anders: widget HTML wordt verwijderd
 // ----------------------------
 
-// ---- helpers / selectors (alleen declaraties; query's doen we in init) ----
 let welcomeShown = false;
+let chatInitialized = false;
 
-// Disable chat on LearnWorlds course player pages
-function shouldDisableChatOnThisPage() {
+// ----------------------------
+// 1) WHITELIST
+// ----------------------------
+function shouldEnableChatOnThisPage() {
   const path = location.pathname.toLowerCase();
-  const qs = location.search.toLowerCase();
 
-  if (path.includes("path-player")) return true;
-  if (qs.includes("courseid=") && qs.includes("unit=")) return true;
+  if (path === "/start") return true;
+  if (path === "/blog" || path.startsWith("/blog/")) return true;
+  if (path === "/verkeersborden" || path.startsWith("/verkeersborden/")) return true;
 
   return false;
 }
 
-// persistent visitor id (browser/device scope)
+// ----------------------------
+// 2) OPTIONAL ID/DEVICE HELPERS
+// ----------------------------
 function getVisitorId() {
   const KEY = "ht_visitor_id";
   let id = localStorage.getItem(KEY);
@@ -32,25 +35,26 @@ function getVisitorId() {
   return id;
 }
 
-// LearnWorlds identity (email) if present
 function getUserEmail() {
   const el = document.querySelector("#lw-identity");
   const email = el?.dataset?.email?.trim();
   return email || null;
 }
 
-// device info
 function getDeviceType() {
   const w = Math.min(window.innerWidth, window.screen?.width || window.innerWidth);
   if (w <= 767) return "mobile";
   if (w <= 1024) return "tablet";
   return "desktop";
 }
+
 function isTouchDevice() {
   return ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
 }
 
-// safe link rendering (Markdown + raw URLs)
+// ----------------------------
+// 3) SAFE LINK RENDERING
+// ----------------------------
 function escapeHTML(str) {
   return String(str)
     .replaceAll("&", "&amp;")
@@ -59,16 +63,15 @@ function escapeHTML(str) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+
 function mdLinksToHTML(str) {
   let html = escapeHTML(str);
 
-  // markdown links: [text](https://...)
   html = html.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener nofollow">$1</a>'
   );
 
-  // raw URLs
   html = html.replace(/(?<!["'=\]])\bhttps?:\/\/[^\s<)]+/g, (url) =>
     `<a href="${url}" target="_blank" rel="noopener nofollow">${url}</a>`
   );
@@ -77,41 +80,54 @@ function mdLinksToHTML(str) {
   return html;
 }
 
-// ---- hide-mode (course pages) ----
-const HIDE_CLASS = "ht-hide-chat";
-const HIDE_STYLE_ID = "ht-hide-chat-css";
+// ----------------------------
+// 4) INJECT / REMOVE HTML
+// ----------------------------
+function injectChatHTMLOnce() {
+  if (document.querySelector(".chat-launcher-container") || document.querySelector(".chat-window")) return;
 
-function ensureHideCSS() {
-  if (document.getElementById(HIDE_STYLE_ID)) return;
+  const wrapper = document.createElement("div");
+  wrapper.id = "ht-chat-root";
+  wrapper.innerHTML = `
+    <div class="chat-launcher-container">
+      <div class="chat-intro-bubble">
+        <button class="close-intro" aria-label="Sluit popup">×</button>
+        <span class="intro-text">Nawfal hier 👋 Waar kan ik je mee helpen?</span>
+      </div>
+      <div class="chat-launcher"></div>
+    </div>
 
-  const style = document.createElement("style");
-  style.id = HIDE_STYLE_ID;
-  style.textContent = `
-    .${HIDE_CLASS} .chat-launcher-container,
-    .${HIDE_CLASS} .chat-launcher,
-    .${HIDE_CLASS} .chat-window,
-    .${HIDE_CLASS} .chat-intro-bubble {
-      display: none !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
+    <div class="chat-window" style="display:none;">
+      <div class="chat-header">
+        <img src="https://raw.githubusercontent.com/mjhtimmerman/HaalTheorie/main/logo%20ht.png"
+             alt="HaalTheorie Logo" class="chat-logo">
+        <button class="close-chat">×</button>
+      </div>
+      <div class="chat-messages"></div>
+      <div class="chat-input">
+        <textarea rows="1" placeholder="Typ een bericht..."></textarea>
+        <button>➤</button>
+      </div>
+    </div>
   `;
-  document.head.appendChild(style);
+
+  document.body.appendChild(wrapper);
 }
 
-function enableHideMode() {
-  ensureHideCSS();
-  document.documentElement.classList.add(HIDE_CLASS);
+function removeChatHTMLIfPresent() {
+  // Verwijder onze root als die bestaat
+  document.getElementById("ht-chat-root")?.remove();
+
+  // Fallback: als er nog losse legacy nodes bestaan (van oude embed)
+  document.querySelector(".chat-launcher-container")?.remove();
+  document.querySelector(".chat-window")?.remove();
 }
 
-function disableHideMode() {
-  document.documentElement.classList.remove(HIDE_CLASS);
-}
-
-// ---- chat init (non-course pages) ----
-let chatInitialized = false;
-
+// ----------------------------
+// 5) CHAT LOGIC
+// ----------------------------
 function initChatIfNeeded() {
+  // Als eerder geïnitialiseerd, niet opnieuw listeners zetten
   if (chatInitialized) return;
 
   const launcher = document.querySelector(".chat-launcher");
@@ -122,17 +138,14 @@ function initChatIfNeeded() {
   const input = document.querySelector(".chat-input textarea");
   const messages = document.querySelector(".chat-messages");
 
-  // Als de UI nog niet in de DOM zit (late inject), dan later opnieuw proberen via boot()
   if (!launcher || !chatWindow || !closeBtn || !sendBtn || !input || !messages) return;
 
-  // Session ID genereren / hergebruiken
   let sessionId = localStorage.getItem("chatSessionId");
   if (!sessionId) {
     sessionId = Date.now().toString() + "-" + Math.random().toString(36).substr(2, 9);
     localStorage.setItem("chatSessionId", sessionId);
   }
 
-  // Typing indicator
   const typingIndicator = document.createElement("div");
   typingIndicator.className = "typing-indicator";
   typingIndicator.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
@@ -143,6 +156,7 @@ function initChatIfNeeded() {
     typingIndicator.style.display = "inline-block";
     messages.scrollTop = messages.scrollHeight;
   }
+
   function hideTypingIndicator() {
     typingIndicator.style.display = "none";
   }
@@ -183,7 +197,6 @@ function initChatIfNeeded() {
     const text = input.value.trim();
     if (!text) return;
 
-    // User message
     const userMsg = document.createElement("div");
     userMsg.className = "message user";
     userMsg.innerText = text;
@@ -204,12 +217,10 @@ function initChatIfNeeded() {
         message: text,
         sessionId: sessionId,
 
-        // identifiers
         visitorId: visitorId,
         userEmail: userEmail,
         userKeyType: userEmail ? "email" : null,
 
-        // device/page context
         deviceType: deviceType,
         isTouch: touch,
         userAgent: navigator.userAgent,
@@ -259,6 +270,7 @@ function initChatIfNeeded() {
   }
 
   sendBtn.addEventListener("click", sendMessage);
+
   input.addEventListener("keydown", function(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -277,38 +289,31 @@ function initChatIfNeeded() {
   chatInitialized = true;
 }
 
-// ---- SPA boot logic ----
-function isCourseContext() {
-  // shouldDisableChatOnThisPage() dekt URL, playerFrame dekt LearnWorlds iframe player
-  return shouldDisableChatOnThisPage() || !!document.getElementById("playerFrame");
-}
-
+// ----------------------------
+// 6) BOOT (SPA-PROOF)
+// ----------------------------
 function boot() {
-  if (isCourseContext()) {
-    enableHideMode();
+  if (shouldEnableChatOnThisPage()) {
+    injectChatHTMLOnce();
+    initChatIfNeeded();
   } else {
-    disableHideMode();
-    initChatIfNeeded(); // init pas op niet-course pagina's
+    // Hard remove: geen launcher mogelijk op course pages
+    removeChatHTMLIfPresent();
   }
 }
 
-// init
 boot();
 
-// triggers
 window.addEventListener("load", boot);
 window.addEventListener("popstate", boot);
 
-// history hooks (SPA)
 const _push = history.pushState;
 history.pushState = function () { _push.apply(this, arguments); boot(); };
 
 const _replace = history.replaceState;
 history.replaceState = function () { _replace.apply(this, arguments); boot(); };
 
-// observe DOM changes (late inject)
 const obs = new MutationObserver(boot);
 obs.observe(document.documentElement, { childList: true, subtree: true });
 
-// (optioneel) disconnect na 2 minuten om overhead te limiteren
 setTimeout(() => obs.disconnect(), 120000);
