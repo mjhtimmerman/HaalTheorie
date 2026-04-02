@@ -75,7 +75,14 @@ function escapeHTML(str) {
 }
 
 function mdLinksToHTML(str) {
-  let html = escapeHTML(str);
+  let text = String(str || "");
+
+  // verwijder markdown bold/italic markers
+  text = text
+    .replace(/\*\*(.*?)\*\*/g, "$1")   // **bold**
+    .replace(/\*(.*?)\*/g, "$1");      // *italic*
+
+  let html = escapeHTML(text);
 
   html = html.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
