@@ -15,7 +15,7 @@
   + "body.slug-path-player{--hlt-grad:linear-gradient(135deg,#5937B0 0%,#9B2F8F 40%,#E43777 72%,#FB7171 100%);--hlt-accent:#E43777;--hlt-bg:#FFF8F4;--hlt-card:#FFFFFF;--hlt-line:#F0E3E8;--hlt-soft:#FCEAF1;--hlt-ink:#2A1B33;}"
   + "body.slug-path-player #wrapper.path-player-init,body.slug-path-player .-second-col{background:var(--hlt-bg)!important;}"
   + "body.slug-path-player #wrapper,body.slug-path-player #wrapper *{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif!important;}"
-  + "body.slug-path-player .-first-col{background:var(--hlt-card)!important;border-right:1px solid var(--hlt-line)!important;}"
+  + "body.slug-path-player .-first-col{background:var(--hlt-card)!important;box-shadow:inset -1px 0 0 var(--hlt-line)!important;}"
   + "body.slug-path-player .-first-col-topbar,body.slug-path-player .-default-course-player-name-progress{background:var(--hlt-grad)!important;}"
   + "body.slug-path-player .-default-course-player-name-wrapper,body.slug-path-player .-default-course-player-back,body.slug-path-player .-default-course-player-back-lbl{color:#fff!important;}"
   + "body.slug-path-player .-default-course-player-progress-bar{height:12px!important;border-radius:99px!important;background:rgba(255,255,255,.28)!important;overflow:hidden!important;}"
@@ -88,11 +88,12 @@
   function yesterday(){var d=new Date();d.setDate(d.getDate()-1);return dstr(d);}
   function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return window.__hltMem||{};}}
   function save(s){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){window.__hltMem=s;}}
+  function dagWord(n){ return n===1?'dag':'dagen'; }
   function norm(s){if(s.day!==today()){s.day=today();s.count=0;s.celebrated=null;}if(s.sound===undefined)s.sound=true;if(s.streak===undefined)s.streak=0;if(s.xp===undefined)s.xp=0;return s;}
 
   var BAR_HTML=''
    +'<div class="hlt-g-top"><div class="hlt-g-chips">'
-   +'<div class="hlt-g-chip streak">&#128293; <span id="hlt-streak">0</span><span class="t">&nbsp;dagen</span></div>'
+   +'<div class="hlt-g-chip streak">&#128293; <span id="hlt-streak">0</span><span class="t" id="hlt-streak-lbl">&nbsp;dagen</span></div>'
    +'<div class="hlt-g-chip xp">&#9889; <span id="hlt-xp">0</span><span class="t">&nbsp;XP</span></div></div>'
    +'<div class="hlt-g-goal"><svg class="hlt-g-ring" viewBox="0 0 36 36"><circle class="bgc" cx="18" cy="18" r="15"></circle><circle class="fg" id="hlt-ring" cx="18" cy="18" r="15" stroke-dasharray="94.2" stroke-dashoffset="94.2"></circle></svg>'
    +'<span class="lbl">dagdoel&nbsp;<b id="hlt-goaltxt">0/'+GOAL+'</b></span>'
@@ -111,6 +112,7 @@
   function renderBar(){
     var bar=document.getElementById('hlt-g-bar'); if(!bar)return; var s=norm(load());
     var a=bar.querySelector('#hlt-streak'); if(a)a.textContent=s.streak||0;
+    var al=bar.querySelector('#hlt-streak-lbl'); if(al)al.innerHTML='&nbsp;'+(((s.streak||0)===1)?'dag':'dagen');
     var b=bar.querySelector('#hlt-xp'); if(b)b.textContent=s.xp||0;
     var cnt=Math.min(s.count||0,GOAL),c=2*Math.PI*15;
     var r=bar.querySelector('#hlt-ring'); if(r)r.style.strokeDashoffset=c*(1-cnt/GOAL);
@@ -145,7 +147,7 @@
     if(document.getElementById('hlt-ovl'))return;
     var o=document.createElement('div'); o.id='hlt-ovl'; o.className='hlt-ovl';
     o.innerHTML='<div class="hlt-res"><div class="flame">&#128293;</div><h2 id="hlt-r-title">Dagdoel gehaald!</h2><p id="hlt-r-msg"></p>'
-     +'<div class="card"><div class="row"><div><div class="big" id="hlt-r-streak">0</div><div class="sm">dagen streak</div></div>'
+     +'<div class="card"><div class="row"><div><div class="big" id="hlt-r-streak">0</div><div class="sm" id="hlt-r-streak-lbl">dagen streak</div></div>'
      +'<div style="text-align:right"><div class="big" id="hlt-r-xp">0</div><div class="sm">XP totaal</div></div></div>'
      +'<div class="sm" id="hlt-r-count" style="margin-top:6px"></div><div class="brand">HAALTHEORIE.NL</div></div>'
      +'<button class="cta" id="hlt-r-share">Deel je streak</button><button class="ghost" id="hlt-r-close">Doorgaan</button></div>';
@@ -153,7 +155,7 @@
     var cv=document.createElement('canvas'); cv.id='hlt-conf'; cv.className='hlt-conf'; document.body.appendChild(cv);
     o.querySelector('#hlt-r-close').addEventListener('click',function(){o.classList.remove('show');});
     o.querySelector('#hlt-r-share').addEventListener('click',function(){
-      var s=norm(load()); var txt='\uD83D\uDD25 '+(s.streak||0)+' dagen streak op HaalTheorie, '+(s.xp||0)+' XP! Oefen mee: haaltheorie.nl';
+      var s=norm(load()); var txt='\uD83D\uDD25 '+(s.streak||0)+' '+dagWord(s.streak||0)+' streak op HaalTheorie, '+(s.xp||0)+' XP! Oefen mee: haaltheorie.nl';
       if(navigator.share){navigator.share({text:txt,url:'https://haaltheorie.nl'}).catch(function(){});}
       else if(navigator.clipboard){navigator.clipboard.writeText(txt);var b=this,old=b.textContent;b.textContent='Gekopieerd!';setTimeout(function(){b.textContent=old;},1500);}
     });
@@ -161,9 +163,10 @@
   function celebrate(s){
     ensureOverlay();
     document.getElementById('hlt-r-streak').textContent=s.streak||0;
+    var rl=document.getElementById('hlt-r-streak-lbl'); if(rl)rl.textContent=dagWord(s.streak||0)+' streak';
     document.getElementById('hlt-r-xp').textContent=s.xp||0;
     document.getElementById('hlt-r-count').textContent=GOAL+' vragen geoefend vandaag';
-    document.getElementById('hlt-r-msg').textContent='Je streak staat op '+(s.streak||0)+' dagen. Kom morgen terug om \u2019m te verlengen.';
+    document.getElementById('hlt-r-msg').textContent='Je streak staat op '+(s.streak||0)+' '+dagWord(s.streak||0)+'. Kom morgen terug om \u2019m te verlengen.';
     document.getElementById('hlt-ovl').classList.add('show'); confetti();
   }
   function confetti(){
