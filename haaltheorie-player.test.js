@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6-playful';
+  window.__HLT_PLAYER_VERSION='v6.1-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -146,7 +146,11 @@
   + "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');"
   + ".lw-qn-descr,.lw-qn-decr--inner-container{font-family:'Inter',-apple-system,sans-serif!important;font-size:22px!important;line-height:1.35!important;font-weight:800!important;color:#2A1B33!important;}"
   + ".learnworlds-image{display:block!important;margin:0 auto 8px!important;max-width:460px!important;border-radius:20px!important;border:1px solid #F0E3E8!important;box-shadow:0 12px 30px rgba(42,27,51,.16)!important;}"
-  + ".lw-qn-mc-options.oneOption-per-row{counter-reset:hltopt!important;display:flex!important;flex-direction:column!important;gap:14px!important;width:100%!important;}"
+  + ".lw-qn-mc-options.oneOption-per-row{counter-reset:hltopt!important;display:flex!important;flex-direction:column!important;gap:14px!important;width:100%!important;height:auto!important;min-height:0!important;justify-content:flex-start!important;align-content:flex-start!important;}"
+  /* fix: container verdeelde z'n hoogte over de opties (enorme witruimte tussen
+     optie 1 en 2). height:auto + flex-start zet ze strak onder elkaar. Bare
+     selector als vangnet voor vragen zonder .oneOption-per-row. */
+  + ".lw-qn-mc-options{height:auto!important;min-height:0!important;justify-content:flex-start!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-wrapper{counter-increment:hltopt!important;width:100%!important;margin:0!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-radio{position:absolute!important;opacity:0!important;width:0!important;height:0!important;pointer-events:none!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-circle{display:none!important;}"
@@ -169,7 +173,17 @@
   + ".correct-answers-wrapper{background:#E1F5EE!important;border:2px solid #9FE1CB!important;}"
   + ".author-feedback-wrapper{background:#FFF8EE!important;border:2px solid #FAD9A0!important;}"
   + "@keyframes hltfb{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}"
-  + "@media(max-width:600px){.lw-qn-descr,.lw-qn-decr--inner-container{font-size:19px!important;}.lw-qn-mc-options .lw-qn-radio-option{min-height:60px!important;font-size:16px!important;padding-left:60px!important;}}";
+  /* mobiel: alle nieuwe elementen compacter en op telefoonbreedte. UITSLUITEND
+     uiterlijk/spacing op opties, afbeelding en feedback. GEEN regels op de
+     indien-knop/footer/invulveld -> de v4-bug blijft uitgesloten. */
+  + "@media(max-width:600px){"
+  +   ".lw-qn-descr,.lw-qn-decr--inner-container{font-size:19px!important;}"
+  +   ".lw-qn-mc-options.oneOption-per-row{gap:12px!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option{min-height:58px!important;font-size:16px!important;padding:12px 14px 12px 58px!important;border-bottom-width:4px!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option:before{width:34px!important;height:34px!important;left:12px!important;font-size:14px!important;}"
+  +   ".learnworlds-image{max-width:100%!important;border-radius:16px!important;box-shadow:0 8px 20px rgba(42,27,51,.14)!important;}"
+  +   ".correct-answers-wrapper,.author-feedback-wrapper{padding:12px 14px!important;border-radius:14px!important;margin-top:10px!important;}"
+  + "}";
 
   function injectShell(){
     if(document.getElementById('hlt-player-shell')) return;
