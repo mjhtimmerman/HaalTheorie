@@ -5,8 +5,10 @@
    in <body> logged in.
 
    Veiligheidsgaranties t.o.v. v4:
-   1. Raakt NOOIT de indienen-knop, footer of navigatie in het vragen-iframe
-      (geen enkele regel op .learnworlds-button*, .lw-nav-prog-wrapper e.d.)
+   1. De indien-knop wordt ALLEEN qua uiterlijk gestyled (kleur/gradient/ronding/
+      3D-schaduw) — NOOIT qua geometrie (geen width/padding/afmeting/min-width).
+      Footer en navigatie blijven onaangeraakt. Zo is de width:100%-bug uit v4
+      uitgesloten. LET OP: knop-styling vereist een test op een echt toestel.
    2. Injecteert NIETS in video-units: iframe-CSS alleen in assessment-docs
    3. Geen globale font-override (geen body * meer, ook niet in de shell)
    4. Optie-styling werkt alleen binnen multiple-choice containers
@@ -62,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v5-hardened';
+  window.__HLT_PLAYER_VERSION='v6-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -132,13 +134,19 @@
   + ".lw-qn-mc-options .lw-qn-radio-option-wrapper{counter-increment:hltopt!important;width:100%!important;margin:0!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-radio{position:absolute!important;opacity:0!important;width:0!important;height:0!important;pointer-events:none!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-circle{display:none!important;}"
-  + ".lw-qn-mc-options .lw-qn-radio-option{position:relative!important;display:flex!important;align-items:center!important;width:100%!important;min-height:62px!important;padding:14px 18px 14px 66px!important;background:#fff!important;border:2px solid #F0E3E8!important;border-bottom-width:4px!important;border-radius:16px!important;cursor:pointer!important;font-size:17px!important;font-weight:700!important;color:#2A1B33!important;font-family:'Inter',-apple-system,sans-serif!important;transition:transform .08s,border-color .12s,background .12s!important;}"
+  + ".lw-qn-mc-options .lw-qn-radio-option{position:relative!important;display:flex!important;align-items:center!important;width:100%!important;min-height:62px!important;padding:14px 18px 14px 66px!important;background:#fff!important;border:2px solid #F0E3E8!important;border-bottom-width:5px!important;border-radius:18px!important;cursor:pointer!important;font-size:17px!important;font-weight:800!important;color:#2A1B33!important;font-family:'Inter',-apple-system,sans-serif!important;transition:transform .08s,border-color .12s,background .12s!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option:hover{background:#FFF1F6!important;border-color:#F0B9CE!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option:active{transform:translateY(2px)!important;border-bottom-width:2px!important;}"
-  + ".lw-qn-mc-options .lw-qn-radio-option:before{content:counter(hltopt)!important;position:absolute!important;left:14px!important;top:50%!important;transform:translateY(-50%)!important;width:36px!important;height:36px!important;border:2px solid #EAD4DD!important;border-radius:11px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-weight:800!important;font-size:15px!important;color:#B79AAA!important;background:#fff!important;transition:all .12s!important;}"
+  + ".lw-qn-mc-options .lw-qn-radio-option:before{content:counter(hltopt)!important;position:absolute!important;left:14px!important;top:50%!important;transform:translateY(-50%)!important;width:38px!important;height:38px!important;border:2px solid #EAD4DD!important;border-radius:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-weight:800!important;font-size:15px!important;color:#B79AAA!important;background:#fff!important;transition:all .12s!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-lbl{flex:1 1 auto!important;font-weight:700!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option.hlt-selected{border-color:#E43777!important;background:#FCEAF1!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option.hlt-selected:before{background:linear-gradient(135deg,#B22E91,#E43777)!important;border-color:#E43777!important;color:#fff!important;transform:translateY(-50%) scale(1.06)!important;}"
+  /* indien-knop: ALLEEN uiterlijk (kleur/gradient/ronding/3D-schaduw).
+     BEWUST geen width/padding/border/min-width -> de afmeting blijft exact gelijk,
+     dus de width:100%-bug uit v4 is uitgesloten. Vereist wel een echte-toestel-test. */
+  + ".learnworlds-button-solid-brand{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-radius:16px!important;box-shadow:0 4px 0 #B7245C!important;transition:transform .06s,box-shadow .06s,filter .15s!important;}"
+  + ".learnworlds-button-solid-brand:hover{filter:brightness(1.05)!important;}"
+  + ".learnworlds-button-solid-brand:active{transform:translateY(4px)!important;box-shadow:0 0 0 #B7245C!important;}"
   + "@media(max-width:600px){.lw-qn-descr,.lw-qn-decr--inner-container{font-size:19px!important;}.lw-qn-mc-options .lw-qn-radio-option{min-height:60px!important;font-size:16px!important;padding-left:60px!important;}}";
 
   function injectShell(){
