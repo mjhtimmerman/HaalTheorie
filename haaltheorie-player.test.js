@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.1-playful';
+  window.__HLT_PLAYER_VERSION='v6.2-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -131,6 +131,10 @@
   + ".hlt-res .card .row{display:flex;justify-content:space-between;align-items:flex-end;}.hlt-res .card .big{font-size:28px;font-weight:900;line-height:1;}.hlt-res .card .sm{font-size:12px;font-weight:700;opacity:.92;}.hlt-res .card .brand{font-size:11px;font-weight:800;opacity:.85;margin-top:12px;letter-spacing:.5px;}"
   + ".hlt-res .cta{width:100%;background:linear-gradient(135deg,#FB7171,#E43777);color:#fff;border:none;border-radius:16px;padding:14px;font-weight:800;font-size:14px;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 0 #B7245C;margin-bottom:9px;}.hlt-res .cta:active{transform:translateY(4px);box-shadow:0 0 0 #B7245C;}"
   + ".hlt-res .ghost{width:100%;background:#fff;color:#E43777;border:2px solid #F0E3E8;border-radius:16px;padding:12px;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-size:13px;}"
+  /* ---- eigen deel-menu (story-afbeelding + WhatsApp + kopieer-link) ---- */
+  + ".hlt-share-menu{display:none;flex-direction:column;gap:9px;margin-bottom:9px;}.hlt-share-menu.show{display:flex;animation:hltrise .25s ease both;}"
+  + ".hlt-sh-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;border:2px solid #F0E3E8;background:#fff;color:#2A1B33;border-radius:14px;padding:13px;font-weight:800;font-size:14px;font-family:'Inter',-apple-system,sans-serif;cursor:pointer;transition:filter .15s,background .15s,transform .06s;}.hlt-sh-btn span{font-size:18px;}.hlt-sh-btn:active{transform:translateY(2px);}"
+  + ".hlt-sh-btn.img{background:linear-gradient(135deg,#5937B0,#E43777);color:#fff;border-color:transparent;}.hlt-sh-btn.wa{background:#25D366;color:#fff;border-color:transparent;}.hlt-sh-btn.img:hover,.hlt-sh-btn.wa:hover{filter:brightness(1.05);}"
   + ".hlt-conf{position:fixed;inset:0;pointer-events:none;z-index:100001;display:none;}.hlt-conf.show{display:block;}"
   + ".hlt-acc{background:linear-gradient(135deg,#5937B0,#9B2F8F 40%,#E43777 72%,#FB7171);color:#fff;border-radius:18px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:'Inter',-apple-system,sans-serif;box-shadow:0 12px 30px rgba(42,27,51,.22);}"
   + ".hlt-acc .num{font-size:26px;font-weight:900;line-height:1;}.hlt-acc .lbl{font-size:12px;font-weight:700;opacity:.92;margin-top:4px;}.hlt-acc .cell{text-align:center;}";
@@ -330,11 +334,61 @@
     document.body.appendChild(o);
     var cv=document.createElement('canvas'); cv.id='hlt-conf'; cv.className='hlt-conf'; document.body.appendChild(cv);
     o.querySelector('#hlt-r-close').addEventListener('click',function(){o.classList.remove('show');});
-    o.querySelector('#hlt-r-share').addEventListener('click',function(){
-      var s=norm(load()); var txt='\uD83D\uDD25 '+(s.streak||0)+' '+dagWord(s.streak||0)+' streak op HaalTheorie, '+(s.xp||0)+' XP! Oefen mee: haaltheorie.nl';
-      if(navigator.share){navigator.share({text:txt,url:'https://haaltheorie.nl'}).catch(function(){});}
-      else if(navigator.clipboard){navigator.clipboard.writeText(txt);var b=this,old=b.textContent;b.textContent='Gekopieerd!';setTimeout(function(){b.textContent=old;},1500);}
-    });
+    o.querySelector('#hlt-r-share').addEventListener('click',function(){ var m=ensureShareMenu(); m.classList.toggle('show'); });
+  }
+
+  /* ---------- eigen deel-menu i.p.v. de systeem-sheet ----------
+     Story-afbeelding (canvas) + WhatsApp + kopieer-link. De afbeelding wordt
+     SYNCHROON gemaakt (toDataURL) zodat navigator.share binnen de klik-gesture
+     valt -> werkt ook op iOS. Op desktop valt 'ie netjes terug op downloaden. */
+  function shareText(s){ return '\uD83D\uDD25 '+(s.streak||0)+' '+dagWord(s.streak||0)+' streak op HaalTheorie, '+(s.xp||0)+' XP! Oefen mee op haaltheorie.nl'; }
+  function rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+  function renderStreakCanvas(s){
+    var W=1080,H=1920,cv=document.createElement('canvas');cv.width=W;cv.height=H;var ctx=cv.getContext('2d');
+    var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#5937B0');g.addColorStop(.4,'#9B2F8F');g.addColorStop(.72,'#E43777');g.addColorStop(1,'#FB7171');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.globalAlpha=.10;ctx.font='820px serif';ctx.fillStyle='#fff';ctx.fillText('\uD83D\uDD25',W/2,H/2+40);ctx.globalAlpha=1;
+    var cardX=110,cardY=540,cardW=W-220,cardH=860;
+    ctx.save();ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=60;ctx.shadowOffsetY=24;
+    rrect(ctx,cardX,cardY,cardW,cardH,64);ctx.fillStyle='rgba(255,255,255,.98)';ctx.fill();ctx.restore();
+    ctx.fillStyle='#2A1B33';ctx.font='150px serif';ctx.fillText('\uD83D\uDD25',W/2,cardY+150);
+    ctx.fillStyle='#E43777';ctx.font='900 300px Inter,Arial,sans-serif';ctx.fillText(String(s.streak||0),W/2,cardY+400);
+    ctx.fillStyle='#2A1B33';ctx.font='800 72px Inter,Arial,sans-serif';ctx.fillText(dagWord(s.streak||0)+' streak',W/2,cardY+560);
+    ctx.fillStyle='#5B36C4';ctx.font='800 60px Inter,Arial,sans-serif';ctx.fillText('\u26A1 '+(s.xp||0)+' XP totaal',W/2,cardY+680);
+    ctx.fillStyle='#9A7E8C';ctx.font='700 46px Inter,Arial,sans-serif';ctx.fillText(GOAL+' vragen vandaag geoefend',W/2,cardY+770);
+    ctx.fillStyle='#fff';ctx.font='900 64px Inter,Arial,sans-serif';ctx.fillText('HAALTHEORIE.NL',W/2,cardY+cardH+120);
+    ctx.globalAlpha=.92;ctx.font='700 42px Inter,Arial,sans-serif';ctx.fillText('Haal je theorie in \u00E9\u00E9n keer',W/2,cardY+cardH+190);ctx.globalAlpha=1;
+    return cv;
+  }
+  function dataURLtoBlob(d){var a=d.split(','),m=a[0].match(/:(.*?);/)[1],b=atob(a[1]),n=b.length,u=new Uint8Array(n);while(n--)u[n]=b.charCodeAt(n);return new Blob([u],{type:m});}
+  function shareStoryImage(){
+    var s=norm(load()),btn=document.getElementById('hlt-sh-img');
+    try{
+      var cv=renderStreakCanvas(s),blob=dataURLtoBlob(cv.toDataURL('image/png'));
+      var file=new File([blob],'haaltheorie-streak.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+        navigator.share({files:[file],title:'Mijn HaalTheorie streak',text:shareText(s)}).catch(function(){});
+      }else{
+        var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='haaltheorie-streak.png';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},3000);
+        if(btn){var o=btn.innerHTML;btn.innerHTML='<span>\u2705</span> Opgeslagen';setTimeout(function(){btn.innerHTML=o;},1600);}
+      }
+    }catch(e){}
+  }
+  function shareWhatsApp(){var s=norm(load());try{window.open('https://wa.me/?text='+encodeURIComponent(shareText(s)+' https://haaltheorie.nl'),'_blank');}catch(e){}}
+  function shareCopy(){var s=norm(load()),txt=shareText(s)+' https://haaltheorie.nl';try{if(navigator.clipboard)navigator.clipboard.writeText(txt);}catch(e){}var b=document.getElementById('hlt-sh-cp');if(b){var o=b.innerHTML;b.innerHTML='<span>\u2705</span> Gekopieerd!';setTimeout(function(){b.innerHTML=o;},1500);}}
+  function ensureShareMenu(){
+    var m=document.getElementById('hlt-share-menu');if(m)return m;
+    var res=document.querySelector('#hlt-ovl .hlt-res'),closeBtn=document.getElementById('hlt-r-close');
+    m=document.createElement('div');m.id='hlt-share-menu';m.className='hlt-share-menu';
+    m.innerHTML='<button class="hlt-sh-btn img" id="hlt-sh-img"><span>\uD83D\uDCF8</span> Deel je story</button>'
+      +'<button class="hlt-sh-btn wa" id="hlt-sh-wa"><span>\uD83D\uDCAC</span> WhatsApp</button>'
+      +'<button class="hlt-sh-btn cp" id="hlt-sh-cp"><span>\uD83D\uDD17</span> Kopieer link</button>';
+    res.insertBefore(m,closeBtn);
+    m.querySelector('#hlt-sh-img').addEventListener('click',shareStoryImage);
+    m.querySelector('#hlt-sh-wa').addEventListener('click',shareWhatsApp);
+    m.querySelector('#hlt-sh-cp').addEventListener('click',shareCopy);
+    return m;
   }
   function celebrate(s){
     ensureOverlay();
@@ -343,6 +397,7 @@
     document.getElementById('hlt-r-xp').textContent=s.xp||0;
     document.getElementById('hlt-r-count').textContent=GOAL+' vragen geoefend vandaag';
     document.getElementById('hlt-r-msg').textContent='Je streak staat op '+(s.streak||0)+' '+dagWord(s.streak||0)+'. Kom morgen terug om \u2019m te verlengen.';
+    var _sm=document.getElementById('hlt-share-menu'); if(_sm) _sm.classList.remove('show');
     document.getElementById('hlt-ovl').classList.add('show'); confetti();
   }
   function confetti(){
@@ -378,6 +433,9 @@
     injectStyle(f); bindFrame(f); buildBar();
     if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;}}catch(e){}bindFrame(f);renderBar();},300);});}
   }
+  /* test-hook: toont de dagdoel-modal direct, zodat het deel-menu te previewen is
+     zonder eerst 10 vragen te beantwoorden. Bv: __HLT_DEMO_CELEBRATE({streak:7,xp:140}) */
+  window.__HLT_DEMO_CELEBRATE=function(st){ try{ celebrate(norm(st||load())); }catch(e){ console.warn('demo',e); } };
   setInterval(tick,1200);
   function init(){ tick(); if(!window.__hltSynced&&getEmail()){window.__hltSynced=true;syncServer('get');} }
   if(document.readyState!=='loading'){init();}else{document.addEventListener('DOMContentLoaded',init);}
