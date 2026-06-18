@@ -156,6 +156,12 @@
   + ".learnworlds-button-solid-brand{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-radius:16px!important;box-shadow:0 4px 0 #B7245C!important;transition:transform .06s,box-shadow .06s,filter .15s!important;}"
   + ".learnworlds-button-solid-brand:hover{filter:brightness(1.05)!important;}"
   + ".learnworlds-button-solid-brand:active{transform:translateY(4px)!important;box-shadow:0 0 0 #B7245C!important;}"
+  /* feedback na beantwoorden: soepel in-faden i.p.v. harde sprong + nette kaders
+     (.correct-answers-wrapper = 'Juist antwoord', .author-feedback-wrapper = 'Uitleg') */
+  + ".correct-answers-wrapper,.author-feedback-wrapper{border-radius:16px!important;padding:14px 16px!important;margin-top:12px!important;animation:hltfb .3s cubic-bezier(.22,1,.36,1) both!important;}"
+  + ".correct-answers-wrapper{background:#E1F5EE!important;border:2px solid #9FE1CB!important;}"
+  + ".author-feedback-wrapper{background:#FFF8EE!important;border:2px solid #FAD9A0!important;}"
+  + "@keyframes hltfb{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}"
   + "@media(max-width:600px){.lw-qn-descr,.lw-qn-decr--inner-container{font-size:19px!important;}.lw-qn-mc-options .lw-qn-radio-option{min-height:60px!important;font-size:16px!important;padding-left:60px!important;}}";
 
   function injectShell(){
