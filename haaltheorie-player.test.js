@@ -138,7 +138,7 @@
   var QN_CSS = ""
   + "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');"
   + ".lw-qn-descr,.lw-qn-decr--inner-container{font-family:'Inter',-apple-system,sans-serif!important;font-size:22px!important;line-height:1.35!important;font-weight:800!important;color:#2A1B33!important;}"
-  + ".lw-qn-cnt:has(.lw-qn-mc-options) .learnworlds-image{display:block!important;margin:0 auto 6px!important;max-width:460px!important;border-radius:20px!important;border:1px solid #F0E3E8!important;box-shadow:0 12px 30px rgba(42,27,51,.16)!important;}"
+  + ".learnworlds-image{display:block!important;margin:0 auto 8px!important;max-width:460px!important;border-radius:20px!important;border:1px solid #F0E3E8!important;box-shadow:0 12px 30px rgba(42,27,51,.16)!important;}"
   + ".lw-qn-mc-options.oneOption-per-row{counter-reset:hltopt!important;display:flex!important;flex-direction:column!important;gap:14px!important;width:100%!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-wrapper{counter-increment:hltopt!important;width:100%!important;margin:0!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-radio{position:absolute!important;opacity:0!important;width:0!important;height:0!important;pointer-events:none!important;}"
