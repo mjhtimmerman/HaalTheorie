@@ -101,6 +101,13 @@
   + "body.slug-path-player .lrn-path-chapter-name-txt{font-weight:800!important;color:var(--hlt-ink)!important;}"
   + "body.slug-path-player .lrn-path-completion-circle.completed{color:#0F6E56!important;}"
   + "body.slug-path-player .lrn-path-completion-circle.failed{color:#C0344E!important;}"
+  /* ---- 'Pagina verlaten?'-melding (iziToast): merkstijl, alleen uiterlijk ---- */
+  + "body.slug-path-player .iziToast{border-radius:20px!important;box-shadow:0 22px 60px rgba(42,27,51,.30)!important;font-family:'Inter',-apple-system,sans-serif!important;}"
+  + "body.slug-path-player .iziToast .iziToast-title{font-weight:900!important;color:var(--hlt-ink)!important;}"
+  + "body.slug-path-player .iziToast .iziToast-message{color:#7A6C73!important;}"
+  + "body.slug-path-player .iziToast .iziToast-buttons button,body.slug-path-player .iziToast .iziToast-buttons a{border-radius:12px!important;font-weight:800!important;font-family:'Inter',-apple-system,sans-serif!important;padding:9px 18px!important;border:2px solid #F0E3E8!important;background:#fff!important;color:var(--hlt-accent)!important;cursor:pointer!important;transition:filter .15s,background .15s!important;}"
+  + "body.slug-path-player .iziToast .iziToast-buttons button:first-child,body.slug-path-player .iziToast .iziToast-buttons a:first-child{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-color:transparent!important;}"
+  + "body.slug-path-player .iziToast .iziToast-buttons button:first-child:hover,body.slug-path-player .iziToast .iziToast-buttons a:first-child:hover{filter:brightness(1.05)!important;}"
   + "body.slug-path-player .-second-col .-default-course-player-topbar{background:var(--hlt-card)!important;box-shadow:inset 0 -1px 0 var(--hlt-line),0 2px 14px rgba(137,40,127,.05)!important;}"
   + "body.slug-path-player .default-course-player-nav-btn{font-family:'Inter',-apple-system,sans-serif!important;font-weight:700!important;}"
   + "body.slug-path-player .default-course-player-nav-btn:hover{color:var(--hlt-accent)!important;}"
