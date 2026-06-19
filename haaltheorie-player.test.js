@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.2-playful';
+  window.__HLT_PLAYER_VERSION='v6.3-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -150,11 +150,17 @@
   + "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');"
   + ".lw-qn-descr,.lw-qn-decr--inner-container{font-family:'Inter',-apple-system,sans-serif!important;font-size:22px!important;line-height:1.35!important;font-weight:800!important;color:#2A1B33!important;}"
   + ".learnworlds-image{display:block!important;margin:0 auto 8px!important;max-width:460px!important;border-radius:20px!important;border:1px solid #F0E3E8!important;box-shadow:0 12px 30px rgba(42,27,51,.16)!important;}"
-  + ".lw-qn-mc-options.oneOption-per-row{counter-reset:hltopt!important;display:flex!important;flex-direction:column!important;gap:14px!important;width:100%!important;height:auto!important;min-height:0!important;justify-content:flex-start!important;align-content:flex-start!important;}"
+  + ".lw-qn-mc-options.oneOption-per-row{counter-reset:hltopt!important;display:flex!important;flex-direction:column!important;gap:10px!important;width:100%!important;height:auto!important;min-height:0!important;justify-content:flex-start!important;align-content:flex-start!important;}"
   /* fix: container verdeelde z'n hoogte over de opties (enorme witruimte tussen
      optie 1 en 2). height:auto + flex-start zet ze strak onder elkaar. Bare
      selector als vangnet voor vragen zonder .oneOption-per-row. */
   + ".lw-qn-mc-options{height:auto!important;min-height:0!important;justify-content:flex-start!important;}"
+  /* leesbaarheid in de beantwoorde staat: LearnWorlds zet 'disabled' op de opties
+     en vervaagt ze via een ouder (opacity). Forceer de hele keten zichtbaar +
+     donkere tekst, zodat Ja/Nee leesbaar blijven na het antwoorden. */
+  + ".lw-qn-mc-options .lw-qn-radio-option-wrapper,.lw-qn-mc-options .relative,.lw-qn-mc-options .lw-qn-radio-option,.lw-qn-mc-options .disabled,.lw-qn-mc-options [class*=disabled]{opacity:1!important;}"
+  + ".lw-qn-mc-options .lw-qn-radio-option-wrapper,.lw-qn-mc-options .relative{height:auto!important;min-height:0!important;}"
+  + ".lw-qn-mc-options .lw-qn-radio-option,.lw-qn-mc-options .lw-qn-radio-option-lbl,.lw-qn-mc-options .lw-qn-radio-option-lbl *{color:#2A1B33!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-wrapper{counter-increment:hltopt!important;width:100%!important;margin:0!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-radio{position:absolute!important;opacity:0!important;width:0!important;height:0!important;pointer-events:none!important;}"
   + ".lw-qn-mc-options .lw-qn-radio-option-circle{display:none!important;}"
@@ -177,6 +183,17 @@
   + ".correct-answers-wrapper{background:#E1F5EE!important;border:2px solid #9FE1CB!important;}"
   + ".author-feedback-wrapper{background:#FFF8EE!important;border:2px solid #FAD9A0!important;}"
   + "@keyframes hltfb{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}"
+  /* gekozen/juist antwoord als HEEL BLOK kleuren i.p.v. een losse vinkje-badge.
+     LearnWorlds zet geen correct/wrong-class op de optie, dus colorAnswers() (JS)
+     zet hlt-correct/hlt-wrong op de wrapper o.b.v. de 'Juist antwoord'-tekst.
+     Deze regels staan bewust NA .hlt-selected zodat ze qua bron-volgorde winnen. */
+  + ".correctness-badge{display:none!important;}"
+  + ".lw-qn-mc-options .hlt-correct .lw-qn-radio-option{background:#E1F5EE!important;border-color:#3FB98C!important;border-bottom-color:#2FA877!important;color:#0F6E56!important;}"
+  + ".lw-qn-mc-options .hlt-correct .lw-qn-radio-option-lbl{color:#0F6E56!important;}"
+  + ".lw-qn-mc-options .hlt-correct .lw-qn-radio-option:before{background:#2FA877!important;border-color:#2FA877!important;color:#fff!important;}"
+  + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option{background:#FCE8EC!important;border-color:#E4607A!important;border-bottom-color:#D23A5A!important;color:#B0203C!important;}"
+  + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option-lbl{color:#B0203C!important;}"
+  + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option:before{background:#D23A5A!important;border-color:#D23A5A!important;color:#fff!important;}"
   /* mobiel: alle nieuwe elementen compacter en op telefoonbreedte. UITSLUITEND
      uiterlijk/spacing op opties, afbeelding en feedback. GEEN regels op de
      indien-knop/footer/invulveld -> de v4-bug blijft uitgesloten. */
@@ -295,6 +312,27 @@
       return !!doc.querySelector('.lw-qn-cnt,.lw-qn-descr,.lw-qn-mc-options');
     }catch(e){return false;}
   }
+  /* kleur het gekozen/juiste antwoord als heel blok (LearnWorlds biedt geen
+     correct/wrong-class). Juiste optie = label-tekst komt voor in .correct-answers-
+     wrapper; fout gekozen = optie met .correctness-badge die niet juist is. */
+  function colorAnswers(doc){
+    try{
+      var mc=doc.querySelector('.lw-qn-mc-options'); if(!mc) return;
+      var caw=doc.querySelector('.correct-answers-wrapper'); if(!caw) return;
+      var ct=(caw.textContent||'').replace(/juist antwoord/i,'').trim().toLowerCase();
+      if(!ct) return;
+      var ws=mc.querySelectorAll('.lw-qn-radio-option-wrapper'),i;
+      for(i=0;i<ws.length;i++){
+        var w=ws[i];
+        var l=w.querySelector('.lw-qn-radio-option-lbl')||w.querySelector('.lw-qn-radio-option');
+        var t=(l?l.textContent:'').trim().toLowerCase();
+        var chosen=!!w.querySelector('.correctness-badge');
+        w.classList.remove('hlt-correct','hlt-wrong');
+        if(t&&ct.indexOf(t)>-1) w.classList.add('hlt-correct');
+        else if(chosen) w.classList.add('hlt-wrong');
+      }
+    }catch(e){}
+  }
   function bindFrame(frame){
     try{
       var doc=frame.contentDocument;
@@ -303,6 +341,7 @@
       var seen=false;
       var obs=new MutationObserver(function(){
         var fb=doc.querySelector('.correctness-badge, .correct-answers-wrapper');
+        if(fb) colorAnswers(doc);
         if(fb&&!seen){seen=true;countQuestion();} else if(!fb&&seen){seen=false;}
       });
       obs.observe(doc.body,{childList:true,subtree:true});
