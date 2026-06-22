@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.5-playful';
+  window.__HLT_PLAYER_VERSION='v6.6-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -119,7 +119,6 @@
   + ".hlt-g-chip.streak{background:#FFF1E3;color:#C8730E;}.hlt-g-chip.xp{background:#F1ECFD;color:#5B36C4;}"
   + ".hlt-g-goal{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#9A7E8C;}"
   + ".hlt-g-ring{width:34px;height:34px;transform:rotate(-90deg);}.hlt-g-ring circle{fill:none;stroke-width:5;}.hlt-g-ring .bgc{stroke:#F0E3E8;}.hlt-g-ring .fg{stroke:#E43777;stroke-linecap:round;transition:stroke-dashoffset .5s cubic-bezier(.22,1,.36,1);}"
-  + ".hlt-g-sound{width:36px;height:36px;border-radius:50%;border:2px solid #F0E3E8;background:#fff;cursor:pointer;font-size:15px;}"
   + ".hlt-g-stories{display:flex;gap:5px;}.hlt-g-seg{flex:1;height:7px;border-radius:99px;background:#F0E3E8;overflow:hidden;}.hlt-g-seg span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(135deg,#5937B0,#E43777,#FB7171);transition:width .4s ease;}.hlt-g-seg.done span{width:100%;}"
   + ".hlt-xp-pop{position:fixed;font-weight:900;font-size:22px;color:#E43777;pointer-events:none;z-index:99999;animation:hltxp 1s ease-out forwards;font-family:'Inter',-apple-system,sans-serif;}"
   + "@keyframes hltxp{0%{opacity:0;transform:translateY(0) scale(.6);}20%{opacity:1;transform:translateY(-10px) scale(1.1);}100%{opacity:0;transform:translateY(-60px) scale(1);}}"
@@ -211,12 +210,13 @@
      uiterlijk/spacing op opties, afbeelding en feedback. GEEN regels op de
      indien-knop/footer/invulveld -> de v4-bug blijft uitgesloten. */
   + "@media(max-width:600px){"
-  +   ".lw-qn-descr,.lw-qn-decr--inner-container{font-size:19px!important;}"
+  +   ".lw-qn-descr,.lw-qn-decr--inner-container,.lw-qn-descr *{font-size:22px!important;line-height:1.3!important;}"
   +   ".lw-qn-mc-options.oneOption-per-row{gap:12px!important;}"
-  +   ".lw-qn-mc-options .lw-qn-radio-option{min-height:58px!important;font-size:16px!important;padding:12px 14px 12px 58px!important;border-bottom-width:4px!important;}"
-  +   ".lw-qn-mc-options .lw-qn-radio-option:before{width:34px!important;height:34px!important;left:12px!important;font-size:14px!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option{min-height:60px!important;font-size:19px!important;padding:14px 16px 14px 62px!important;border-bottom-width:4px!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option-lbl,.lw-qn-mc-options .lw-qn-radio-option-lbl *{font-size:19px!important;line-height:1.35!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option:before{width:36px!important;height:36px!important;left:13px!important;font-size:15px!important;}"
   +   ".learnworlds-image{max-width:100%!important;border-radius:16px!important;box-shadow:0 8px 20px rgba(42,27,51,.14)!important;}"
-  +   ".correct-answers-wrapper,.author-feedback-wrapper{padding:12px 14px!important;border-radius:14px!important;margin-top:10px!important;}"
+  +   ".correct-answers-wrapper,.author-feedback-wrapper{padding:13px 15px!important;border-radius:14px!important;margin-top:10px!important;font-size:16px!important;line-height:1.45!important;}"
   + "}";
 
   /* ---------- ebook content-pagina's (bv. Leerdoelen) ----------
@@ -308,7 +308,7 @@
    +'<div class="hlt-g-chip xp">&#9889; <span id="hlt-xp">0</span><span class="t">&nbsp;XP</span></div></div>'
    +'<div class="hlt-g-goal"><svg class="hlt-g-ring" viewBox="0 0 36 36"><circle class="bgc" cx="18" cy="18" r="15"></circle><circle class="fg" id="hlt-ring" cx="18" cy="18" r="15" stroke-dasharray="94.2" stroke-dashoffset="94.2"></circle></svg>'
    +'<span class="lbl">dagdoel&nbsp;<b id="hlt-goaltxt">0/10</b></span>'
-   +'<button class="hlt-g-sound" id="hlt-sound" title="geluid aan/uit">&#128266;</button></div></div>'
+   +'</div></div>'
    +'<div class="hlt-g-stories" id="hlt-stories"></div>';
 
   function buildBar(){
@@ -319,7 +319,6 @@
     var st=bar.querySelector('#hlt-stories'),h='',i;
     for(i=0;i<GOAL;i++)h+='<div class="hlt-g-seg"><span></span></div>';
     st.innerHTML=h;
-    bar.querySelector('#hlt-sound').addEventListener('click',function(){var s=norm(load());s.sound=!s.sound;save(s);this.innerHTML=s.sound?'\uD83D\uDD0A':'\uD83D\uDD07';});
     renderBar(); return true;
   }
   function renderBar(){
@@ -332,9 +331,7 @@
     var g=bar.querySelector('#hlt-goaltxt'); if(g)g.textContent=cnt+'/'+GOAL;
     var segs=bar.querySelectorAll('.hlt-g-seg'),i;
     for(i=0;i<segs.length;i++)segs[i].className='hlt-g-seg'+(i<cnt?' done':'');
-    var sn=bar.querySelector('#hlt-sound'); if(sn)sn.innerHTML=(s.sound!==false)?'\uD83D\uDD0A':'\uD83D\uDD07';
   }
-  function beep(){var s=load();if(s.sound===false)return;try{var c=new (window.AudioContext||window.webkitAudioContext)();[620,820].forEach(function(f,i){var o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.type='sine';o.connect(g);g.connect(c.destination);var t=c.currentTime+i*0.1;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.15,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);o.start(t);o.stop(t+0.18);});}catch(e){}}
   function haptic(){if(navigator.vibrate){try{navigator.vibrate(25);}catch(e){}}}
   function xpPop(a){var bar=document.getElementById('hlt-g-bar');if(!bar)return;var an=bar.querySelector('#hlt-xp')||bar,r=an.getBoundingClientRect();var p=document.createElement('div');p.className='hlt-xp-pop';p.textContent='+'+a+' XP';p.style.left=r.left+'px';p.style.top=(r.top-6)+'px';document.body.appendChild(p);setTimeout(function(){p.remove();},1000);}
 
@@ -344,7 +341,7 @@
     var s=norm(load()),t=today();
     if(s.lastPractice!==t){s.streak=(s.lastPractice===yesterday()?(s.streak||0)+1:1);s.lastPractice=t;}
     s.count=(s.count||0)+1; s.xp=(s.xp||0)+XP_PER; save(s);
-    renderBar(); xpPop(XP_PER); beep(); haptic(); syncServer('answer');
+    renderBar(); xpPop(XP_PER); haptic(); syncServer('answer');
     if(s.count===GOAL&&s.celebrated!==t){s.celebrated=t;save(s);celebrate(s);}
   }
 
