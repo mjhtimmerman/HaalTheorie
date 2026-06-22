@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.4-playful';
+  window.__HLT_PLAYER_VERSION='v6.5-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -217,6 +217,38 @@
   +   ".lw-qn-mc-options .lw-qn-radio-option:before{width:34px!important;height:34px!important;left:12px!important;font-size:14px!important;}"
   +   ".learnworlds-image{max-width:100%!important;border-radius:16px!important;box-shadow:0 8px 20px rgba(42,27,51,.14)!important;}"
   +   ".correct-answers-wrapper,.author-feedback-wrapper{padding:12px 14px!important;border-radius:14px!important;margin-top:10px!important;}"
+  + "}";
+
+  /* ---------- ebook content-pagina's (bv. Leerdoelen) ----------
+     Eigen type, los van de assessment: body.lw-ebook met #pageContent. Puur
+     cosmetisch, geen knoppen/geometrie, dus de v4-bug speelt hier niet. Alles
+     gescoped op body.lw-ebook zodat de vraag-documenten onaangeroerd blijven. */
+  var EBOOK_CSS = ""
+  + "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');"
+  + "body.lw-ebook #pageContent{font-family:'Inter',-apple-system,sans-serif!important;color:#2A1B33!important;max-width:740px!important;margin:0 auto!important;font-size:15.5px!important;line-height:1.6!important;}"
+  + "body.lw-ebook #pageContent .lw-ebook-heading2,body.lw-ebook #pageContent h2{font-family:'Inter',sans-serif!important;font-weight:900!important;color:#2A1B33!important;font-size:26px!important;line-height:1.2!important;position:relative!important;padding-left:16px!important;margin:8px 0 10px!important;}"
+  + "body.lw-ebook #pageContent .lw-ebook-heading2:before,body.lw-ebook #pageContent h2:before{content:''!important;position:absolute!important;left:0;top:5px;bottom:5px;width:6px;border-radius:99px;background:linear-gradient(180deg,#5937B0,#E43777,#FB7171)!important;}"
+  + "body.lw-ebook #pageContent .hlt-intro{font-weight:700!important;font-size:15px!important;color:#9A7E8C!important;margin:2px 0 14px!important;}"
+  + "body.lw-ebook #pageContent .hlt-ld-list{list-style:none!important;padding:0!important;margin:0!important;display:flex!important;flex-direction:column!important;gap:10px!important;}"
+  + "body.lw-ebook #pageContent .hlt-ld-row{display:flex!important;align-items:flex-start!important;gap:12px!important;background:#fff!important;border:1px solid #F0E3E8!important;border-radius:14px!important;box-shadow:0 5px 14px rgba(42,27,51,.06)!important;padding:13px 15px!important;font-size:16px!important;font-weight:600!important;line-height:1.4!important;color:#2A1B33!important;}"
+  + "body.lw-ebook #pageContent .hlt-ld-row .hlt-ck{flex:0 0 auto!important;width:24px!important;height:24px!important;border-radius:99px!important;background:linear-gradient(135deg,#34C28E,#2FA877)!important;display:flex!important;align-items:center!important;justify-content:center!important;margin-top:1px!important;box-shadow:0 2px 6px rgba(47,168,119,.35)!important;}"
+  + "body.lw-ebook #pageContent .hlt-ld-row .hlt-ck svg{width:14px!important;height:14px!important;display:block!important;}"
+  /* Samenvatting: tussenkopjes (div met alleen 1 vetgedrukt stukje) als duidelijk
+     gekleurd kopje met gradient-streepje. Inline-vet in de lopende tekst blijft. */
+  + "body.lw-ebook #pageContent .hlt-sv-h{display:block!important;position:relative!important;font-weight:800!important;font-size:17px!important;line-height:1.25!important;margin:22px 0 7px!important;padding:2px 0 2px 14px!important;}"
+  + "body.lw-ebook #pageContent .hlt-sv-h,body.lw-ebook #pageContent .hlt-sv-h strong,body.lw-ebook #pageContent .hlt-sv-h b{color:#9B2F8F!important;}"
+  + "body.lw-ebook #pageContent .hlt-sv-h:before{content:''!important;position:absolute!important;left:0;top:3px;bottom:3px;width:5px;border-radius:99px;background:linear-gradient(180deg,#5937B0,#E43777,#FB7171)!important;}"
+  /* hoofdstuk-cover (dark-bg section met effen kleur) -> merk-gradient als afgeronde balk.
+     Alleen data-bg-media=color, zodat covers met een achtergrondfoto ongemoeid blijven. */
+  + "body.lw-ebook .learnworlds-section.lw-dark-bg[data-bg-media=color]{background:linear-gradient(135deg,#5937B0 0%,#9B2F8F 38%,#E43777 70%,#FB7171 100%)!important;border-radius:20px!important;box-shadow:0 14px 30px rgba(137,40,127,.28)!important;border:0!important;margin:6px 0 18px!important;overflow:hidden!important;}"
+  + "body.lw-ebook .learnworlds-section.lw-dark-bg[data-bg-media=color] *{background-color:transparent!important;background-image:none!important;border-color:transparent!important;box-shadow:none!important;}"
+  /* mobiel: zijmarge zodat tekst/kaartjes niet tegen de schermrand plakken + iets
+     compactere koppen. Puur uiterlijk, geen knop/geometrie. */
+  + "@media(max-width:600px){"
+  +   "body.lw-ebook #pageContent{padding-left:14px!important;padding-right:14px!important;font-size:15px!important;}"
+  +   "body.lw-ebook #pageContent .lw-ebook-heading2,body.lw-ebook #pageContent h2{font-size:23px!important;}"
+  +   "body.lw-ebook #pageContent .hlt-ld-row{font-size:15px!important;padding:12px 13px!important;}"
+  +   "body.lw-ebook #pageContent .hlt-sv-h{font-size:16px!important;margin-top:18px!important;}"
   + "}";
 
   function injectShell(){
@@ -374,6 +406,84 @@
     }catch(err){}
   }
 
+  /* ---------- ebook content-pagina's ---------- */
+  function isEbookDoc(doc){
+    try{
+      if(!doc||!doc.body) return false;
+      if(doc.body.classList&&doc.body.classList.contains('lw-ebook')) return true;
+      return !!doc.querySelector('#pageContent.page-content');
+    }catch(e){return false;}
+  }
+  function hltEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  /* Bouwt een vinkjes-tekstblok (Leerdoelen) om tot kaartjes. LearnWorlds zet de
+     leerdoelen NIET in een lijst, maar als losse regels in 1 <p>: elk doel start
+     met <cite class="fa-check-circle"> en is gescheiden door <br>; de intro staat
+     in <strong>. We splitsen op <br>, lezen intro + items en vervangen de
+     tekst-container door <p class=hlt-intro> + <ul class=hlt-ld-list>. Idempotent:
+     na ombouw bestaan de cites niet meer, dus herhaald draaien is een no-op. */
+  function enhanceEbook(doc){
+    try{
+      var root=doc.getElementById('pageContent')||doc.body;
+      if(!root.querySelector('cite[class*=check],[class*=fa-check]')) return;
+      var CK='<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.3 4.3L19 7.4" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      var ps=root.querySelectorAll('p');
+      Array.prototype.forEach.call(ps,function(p){
+        if(!p.isConnected) return;
+        if(!p.querySelector('cite[class*=check],[class*=fa-check]')) return;
+        var segs=[[]];
+        Array.prototype.forEach.call(p.childNodes,function(n){ if(n.nodeName==='BR')segs.push([]); else segs[segs.length-1].push(n); });
+        var intro='',items=[];
+        segs.forEach(function(seg){
+          var hasCheck=seg.some(function(n){return n.nodeType===1&&/check/.test(n.className||'');});
+          var txt='';
+          seg.forEach(function(n){ if(n.nodeType===1&&/learnworlds-icon|fa-/.test(n.className||'')) return; txt+=(n.textContent||''); });
+          txt=txt.replace(/ /g,' ').trim();
+          if(hasCheck){ if(txt) items.push(txt.replace(/[;.]\s*$/,'')); }
+          else if(txt&&seg.some(function(n){return n.nodeType===1&&n.tagName==='STRONG';})&&!intro){ intro=txt.replace(/\s*:\s*$/,''); }
+        });
+        if(!items.length) return;
+        var html=(intro?'<p class="hlt-intro">'+hltEsc(intro)+':</p>':'')
+          +'<ul class="hlt-ld-list">'
+          +items.map(function(t){return '<li class="hlt-ld-row"><span class="hlt-ck">'+CK+'</span><span>'+hltEsc(t)+'</span></li>';}).join('')
+          +'</ul>';
+        var host=p.closest('.lw-ebook-mainTextNormal')||p.closest('.learnworlds-element')||p.parentElement;
+        host.innerHTML=html; host.setAttribute('data-hlt','1');
+      });
+    }catch(e){}
+  }
+  /* Samenvatting-pagina's: markeer tussenkopjes. Een kopje is een element binnen
+     .lw-ebook-mainTextNormal waarvan de hele inhoud precies 1 vetgedrukt stukje is
+     (div><strong>..</strong>). Inline-vet in de lopende tekst zit in elementen met
+     ook gewone tekst eromheen, dus die worden niet geraakt. Idempotent. */
+  function styleSummary(doc){
+    try{
+      var root=doc.getElementById('pageContent')||doc.body;
+      var els=root.querySelectorAll('.lw-ebook-mainTextNormal div, .lw-ebook-mainTextNormal p');
+      Array.prototype.forEach.call(els,function(el){
+        if(el.classList.contains('hlt-sv-h')) return;
+        if(el.children.length!==1) return;
+        var c=el.children[0];
+        if(c.tagName!=='STRONG'&&c.tagName!=='B') return;
+        var full=(el.textContent||'').replace(/ /g,' ').trim();
+        var stt=(c.textContent||'').replace(/ /g,' ').trim();
+        if(full&&full===stt&&stt.length<=60) el.classList.add('hlt-sv-h');
+      });
+    }catch(e){}
+  }
+  function ebookFrame(frame){
+    try{
+      var doc=frame.contentDocument;
+      if(!isEbookDoc(doc)||!doc.head) return;
+      if(!doc.getElementById('hlt-ebook-style')){var st=doc.createElement('style');st.id='hlt-ebook-style';st.textContent=EBOOK_CSS;doc.head.appendChild(st);}
+      enhanceEbook(doc); styleSummary(doc);
+      if(!doc.__hltEbObs){
+        doc.__hltEbObs=true;
+        var obs=new MutationObserver(function(){ enhanceEbook(doc); styleSummary(doc); });
+        obs.observe(doc.body,{childList:true,subtree:true});
+      }
+    }catch(e){}
+  }
+
   /* ---------- dagdoel-celebration ---------- */
   function ensureOverlay(){
     if(document.getElementById('hlt-ovl'))return;
@@ -482,8 +592,8 @@
     renderAccountWidget();
     if(!document.body||!document.body.classList.contains('slug-path-player')) return;
     var f=document.getElementById('playerFrame'); if(!f)return;
-    injectStyle(f); bindFrame(f); buildBar();
-    if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;}}catch(e){}bindFrame(f);renderBar();},300);});}
+    injectStyle(f); bindFrame(f); ebookFrame(f); buildBar();
+    if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;f.contentDocument.__hltEbObs=false;}}catch(e){}bindFrame(f);ebookFrame(f);renderBar();},300);});}
   }
   /* test-hook: toont de dagdoel-modal direct, zodat het deel-menu te previewen is
      zonder eerst 10 vragen te beantwoorden. Bv: __HLT_DEMO_CELEBRATE({streak:7,xp:140}) */
