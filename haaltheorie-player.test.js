@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.3-playful';
+  window.__HLT_PLAYER_VERSION='v6.4-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -109,6 +109,7 @@
   + "body.slug-path-player .iziToast .iziToast-buttons button:first-child,body.slug-path-player .iziToast .iziToast-buttons a:first-child{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-color:transparent!important;}"
   + "body.slug-path-player .iziToast .iziToast-buttons button:first-child:hover,body.slug-path-player .iziToast .iziToast-buttons a:first-child:hover{filter:brightness(1.05)!important;}"
   + "body.slug-path-player .-second-col .-default-course-player-topbar{background:var(--hlt-card)!important;box-shadow:inset 0 -1px 0 var(--hlt-line),0 2px 14px rgba(137,40,127,.05)!important;}"
+  + "body.slug-path-player #playerFrame{margin-top:0!important;}"
   + "body.slug-path-player .default-course-player-nav-btn{font-family:'Inter',-apple-system,sans-serif!important;font-weight:700!important;}"
   + "body.slug-path-player .default-course-player-nav-btn:hover{color:var(--hlt-accent)!important;}"
   + ".hlt-g-bar{max-width:720px;margin:18px auto 0;padding:0 20px;width:100%;box-sizing:border-box;font-family:'Inter',-apple-system,sans-serif;}"
@@ -194,6 +195,18 @@
   + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option{background:#FCE8EC!important;border-color:#E4607A!important;border-bottom-color:#D23A5A!important;color:#B0203C!important;}"
   + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option-lbl{color:#B0203C!important;}"
   + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option:before{background:#D23A5A!important;border-color:#D23A5A!important;color:#fff!important;}"
+  /* desktop (>=760px): foto + vraag + opties als brede, uitgelijnde kolom (max
+     880px), foto vult de volle kolombreedte zodat 'ie gelijk loopt met de opties,
+     en de loze ruimte erboven weg zodat alles in 1 scherm past. Bewust min-width:
+     760 (ver van de mobiele 600px-grens) en GEEN regels op knop/footer/invulveld,
+     dus de v4-bug blijft uitgesloten. */
+  + "@media(min-width:760px){"
+  +   ".lw-qr-block,.lw-qr-qn,.lw-qn-cnt{max-width:880px!important;width:auto!important;margin-left:auto!important;margin-right:auto!important;}"
+  +   ".lw-qn-descr,.lw-qn-decr--inner-container,.lw-ass-widget-wrapper,.lw-ass-widget-wrapper .relative,.lw-qn-cnt{padding-left:0!important;padding-right:0!important;}"
+  +   ".lw-qn-descr,.lw-qn-decr--inner-container,.lw-ass-widget-wrapper,.lw-ass-widget-wrapper .relative{max-width:100%!important;width:100%!important;}"
+  +   ".learnworlds-image{max-width:100%!important;width:100%!important;}"
+  +   ".lw-qr-block,.lw-qr-qn,.lw-qn-cnt,.form-wrapper__inputs,.lw-qr-section-part,.lw-qn-descr,.lw-qn-decr--inner-container,.lw-qr-block>*:first-child{padding-top:0!important;margin-top:0!important;}"
+  + "}"
   /* mobiel: alle nieuwe elementen compacter en op telefoonbreedte. UITSLUITEND
      uiterlijk/spacing op opties, afbeelding en feedback. GEEN regels op de
      indien-knop/footer/invulveld -> de v4-bug blijft uitgesloten. */
