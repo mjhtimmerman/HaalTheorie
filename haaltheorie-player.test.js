@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.16-playful';
+  window.__HLT_PLAYER_VERSION='v6.17-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -378,9 +378,19 @@
   }
   function buildBar(){
     if(document.getElementById('hlt-g-bar')) return true;
-    var frame=document.getElementById('playerFrame'); if(!frame||!frame.parentElement) return false;
+    /* De banner NIET in .-content-wrapper plaatsen: dat deel bouwt LearnWorlds per vraag
+       opnieuw op, waardoor de banner telkens vernietigd + herbouwd werd (zichtbare sprong
+       na ~1s). In plaats daarvan in de STABIELE scroll-container .-second-col-content, vóór
+       .-content-wrapper. Daar blijft de banner gewoon staan tussen vragen door -> geen
+       herbouw, geen sprong. Valt terug op de oude plek als de structuur anders is. */
+    var sc=document.querySelector('.-second-col-content');
+    var cw=document.querySelector('.-content-wrapper');
+    var frame=document.getElementById('playerFrame');
     var bar=document.createElement('div'); bar.id='hlt-g-bar'; bar.className='hlt-g-bar'; bar.innerHTML=BAR_HTML;
-    frame.parentElement.insertBefore(bar,frame);
+    if(sc&&cw&&cw.parentElement===sc){ sc.insertBefore(bar,cw); }
+    else if(sc){ sc.insertBefore(bar,sc.firstChild); }
+    else if(frame&&frame.parentElement){ frame.parentElement.insertBefore(bar,frame); }
+    else return false;
     var st=bar.querySelector('#hlt-stories'),h='',i;
     for(i=0;i<SEGMENTS;i++)h+='<div class="hlt-g-seg"><span></span></div>';
     st.innerHTML=h;
