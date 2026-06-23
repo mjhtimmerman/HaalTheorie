@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.9-playful';
+  window.__HLT_PLAYER_VERSION='v6.10-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -85,6 +85,9 @@
   + "body.slug-path-player #wrapper.path-player-init,body.slug-path-player .-second-col{background:var(--hlt-bg)!important;}"
   + "body.slug-path-player .-first-col{background:var(--hlt-card)!important;box-shadow:inset -1px 0 0 var(--hlt-line)!important;}"
   + "body.slug-path-player .-first-col-topbar,body.slug-path-player .-default-course-player-name-progress{background:var(--hlt-grad)!important;}"
+  /* sidebar-topbar / inklap-knop (>>) staat als #topBarWrapper.custom-clr1-bg = effen paars -> merk-gradient */
+  + "body.slug-path-player #topBarWrapper.custom-clr1-bg{background:var(--hlt-grad)!important;}"
+  + "body.slug-path-player #topBarWrapper .-hamburger-menu,body.slug-path-player #topBarWrapper .-hamburger-menu *{color:#fff!important;}"
   + "body.slug-path-player .-default-course-player-name-wrapper,body.slug-path-player .-default-course-player-back,body.slug-path-player .-default-course-player-back-lbl{color:#fff!important;font-family:'Inter',-apple-system,sans-serif!important;}"
   + "body.slug-path-player .-default-course-player-progress-bar{height:12px!important;border-radius:99px!important;background:rgba(255,255,255,.28)!important;overflow:hidden!important;}"
   + "body.slug-path-player .-default-course-player-progress-bar-interior{border-radius:99px!important;background:linear-gradient(90deg,#FDC0A1,#FFFFFF)!important;box-shadow:0 0 12px rgba(255,255,255,.7);transition:width .5s cubic-bezier(.22,1,.36,1)!important;}"
