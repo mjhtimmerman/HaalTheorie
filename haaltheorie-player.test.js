@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.17-playful';
+  window.__HLT_PLAYER_VERSION='v6.18-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -115,7 +115,11 @@
   + "body.slug-path-player #playerFrame{margin-top:0!important;}"
   + "body.slug-path-player .default-course-player-nav-btn{font-family:'Inter',-apple-system,sans-serif!important;font-weight:700!important;}"
   + "body.slug-path-player .default-course-player-nav-btn:hover{color:var(--hlt-accent)!important;}"
-  + ".hlt-g-bar{width:100%;padding:10px 0 8px;box-sizing:border-box;background:var(--hlt-bg);border-bottom:1px solid var(--hlt-line);font-family:'Inter',-apple-system,sans-serif;}"
+  /* banner: absoluut gepind in het STABIELE .-second-col (laadt 1x, blijft staan tussen
+     vragen). .-second-col-content krijgt boven-ruimte via een variabele die op het
+     stabiele .-second-col staat (overleeft de herbouw van het content-deel). */
+  + ".hlt-g-bar{position:absolute;left:0;right:0;top:0;z-index:6;padding:10px 0 8px;box-sizing:border-box;background:var(--hlt-bg);border-bottom:1px solid var(--hlt-line);font-family:'Inter',-apple-system,sans-serif;}"
+  + "body.slug-path-player .-second-col-content{padding-top:var(--hlt-gbar-space,0px)!important;}"
   + ".hlt-g-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 auto 10px;max-width:760px;padding:0 18px;box-sizing:border-box;}"
   + ".hlt-g-chips{display:flex;gap:10px;}"
   + ".hlt-g-chip{display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;padding:7px 13px;border-radius:99px;}"
@@ -241,6 +245,11 @@
   +   ".lw-qn-descr,.lw-qn-decr--inner-container,.lw-ass-widget-wrapper,.lw-ass-widget-wrapper .relative{max-width:100%!important;width:100%!important;}"
   +   ".learnworlds-image{max-width:100%!important;width:100%!important;}"
   +   ".lw-qr-block,.lw-qr-qn,.lw-qn-cnt,.form-wrapper__inputs,.lw-qr-section-part,.lw-qn-descr,.lw-qn-decr--inner-container,.lw-qr-block>*:first-child{padding-top:0!important;margin-top:0!important;}"
+  /* desktop: vraag + opties groter/leesbaarder (de tekst was klein t.o.v. de foto) */
+  +   ".lw-qn-descr,.lw-qn-decr--inner-container,.lw-qn-descr *{font-size:26px!important;line-height:1.3!important;font-weight:800!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option{min-height:68px!important;font-size:20px!important;padding:16px 20px 16px 70px!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option-lbl,.lw-qn-mc-options .lw-qn-radio-option-lbl *{font-size:20px!important;line-height:1.35!important;}"
+  +   ".lw-qn-mc-options .lw-qn-radio-option:before{width:42px!important;height:42px!important;left:15px!important;font-size:17px!important;}"
   + "}"
   /* mobiel: alle nieuwe elementen compacter en op telefoonbreedte. UITSLUITEND
      uiterlijk/spacing op opties, afbeelding en feedback. GEEN regels op de
@@ -361,34 +370,40 @@
      past zich aan bij navigeren (intro -> vragen) en bij desktop/mobiel. Alleen
      meten als we bovenaan staan (scrollTop<=2) -> geen jank bij scrollen. Niet
      sticky (sticky gaf overlap met de foto). */
+  /* De banner is absoluut gepind in .-second-col. Zet 'm net onder de topbar en
+     reserveer eronder ruimte (zelfcorrigerend) zodat de content-inhoud net onder de
+     banner valt - ongeacht de exacte topbar/offset van LearnWorlds. De ruimte staat
+     als CSS-variabele op het STABIELE .-second-col, zodat hij de herbouw van het
+     content-deel overleeft (geen sprong, geen herlaad). */
   function positionBar(bar){
     try{
       if(!bar) return;
-      var sc=bar.closest&&bar.closest('.-second-col-content');
-      if(sc&&sc.scrollTop>2) return;
+      var col=document.querySelector('.-second-col'); if(!col) return;
+      var colR=col.getBoundingClientRect();
       var tb=document.querySelector('.-second-col .-default-course-player-topbar,.-default-course-player-topbar');
-      var tbBottom=tb?tb.getBoundingClientRect().bottom:45;
-      var top=bar.getBoundingClientRect().top;
-      var err=tbBottom-top;                          // hoe ver de balk nog onder de topbar moet
+      var tbBottom=tb?tb.getBoundingClientRect().bottom:colR.top+50;
+      bar.style.top=Math.max(0,Math.round(tbBottom-colR.top))+'px';   // net onder de topbar
+      var sc=document.querySelector('.-second-col-content'); if(!sc) return;
+      if(sc.scrollTop>2) return;                                       // alleen bovenaan meten -> geen jank
+      var ref=document.querySelector('.-content-wrapper')||document.getElementById('playerFrame'); if(!ref) return;
+      var err=Math.round(bar.getBoundingClientRect().bottom-ref.getBoundingClientRect().top); // >0=overlap, <0=gat
       if(Math.abs(err)>3){
-        var cur=parseFloat(bar.style.marginTop)||0;
-        bar.style.marginTop=Math.max(0,Math.round(cur+err))+'px';
+        var cur=parseFloat(getComputedStyle(sc).paddingTop)||0;
+        col.style.setProperty('--hlt-gbar-space',Math.max(0,Math.round(cur+err))+'px');
       }
     }catch(e){}
   }
   function buildBar(){
     if(document.getElementById('hlt-g-bar')) return true;
-    /* De banner NIET in .-content-wrapper plaatsen: dat deel bouwt LearnWorlds per vraag
-       opnieuw op, waardoor de banner telkens vernietigd + herbouwd werd (zichtbare sprong
-       na ~1s). In plaats daarvan in de STABIELE scroll-container .-second-col-content, vóór
-       .-content-wrapper. Daar blijft de banner gewoon staan tussen vragen door -> geen
-       herbouw, geen sprong. Valt terug op de oude plek als de structuur anders is. */
-    var sc=document.querySelector('.-second-col-content');
-    var cw=document.querySelector('.-content-wrapper');
+    /* De banner in het STABIELE .-second-col plaatsen (absoluut gepind). Zowel
+       .-content-wrapper als .-second-col-content worden per vraag herbouwd, maar
+       .-second-col niet (daar zit ook de indien-balk, die blijft ook staan). Zo laadt
+       de banner 1x en blijft staan tussen vragen door -> geen herbouw, geen sprong.
+       Valt terug op de oude in-flow plek als .-second-col ontbreekt. */
+    var col=document.querySelector('.-second-col');
     var frame=document.getElementById('playerFrame');
     var bar=document.createElement('div'); bar.id='hlt-g-bar'; bar.className='hlt-g-bar'; bar.innerHTML=BAR_HTML;
-    if(sc&&cw&&cw.parentElement===sc){ sc.insertBefore(bar,cw); }
-    else if(sc){ sc.insertBefore(bar,sc.firstChild); }
+    if(col){ col.appendChild(bar); }                                  // STABIEL: laadt 1x, blijft staan
     else if(frame&&frame.parentElement){ frame.parentElement.insertBefore(bar,frame); }
     else return false;
     var st=bar.querySelector('#hlt-stories'),h='',i;
