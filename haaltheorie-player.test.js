@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.10-playful';
+  window.__HLT_PLAYER_VERSION='v6.11-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -125,7 +125,7 @@
   + ".hlt-g-stories{display:flex;gap:5px;max-width:760px;margin:0 auto;padding:0 18px;box-sizing:border-box;}.hlt-g-seg{flex:1;height:7px;border-radius:99px;background:#F0E3E8;overflow:hidden;}.hlt-g-seg span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(135deg,#5937B0,#E43777,#FB7171);transition:width .4s ease;}.hlt-g-seg.done span{width:100%;}"
   + ".hlt-xp-pop{position:fixed;font-weight:900;font-size:22px;color:#E43777;pointer-events:none;z-index:99999;animation:hltxp 1s ease-out forwards;font-family:'Inter',-apple-system,sans-serif;}"
   + "@keyframes hltxp{0%{opacity:0;transform:translateY(0) scale(.6);}20%{opacity:1;transform:translateY(-10px) scale(1.1);}100%{opacity:0;transform:translateY(-60px) scale(1);}}"
-  + "@media(max-width:600px){.hlt-g-chip .t,.hlt-g-goal span.lbl{display:none;}}"
+  + "@media(max-width:600px){.hlt-g-chip .t{display:none;}.hlt-g-goal{font-size:12px;gap:6px;}.hlt-g-goal span.lbl{display:inline;}}"
   + ".hlt-ovl{position:fixed;inset:0;background:rgba(42,27,51,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100000;padding:20px;font-family:'Inter',-apple-system,sans-serif;}.hlt-ovl.show{display:flex;}"
   + ".hlt-res{width:100%;max-width:380px;background:#fff;border-radius:26px;padding:28px 24px;text-align:center;box-shadow:0 30px 80px rgba(42,27,51,.4);animation:hltrise .4s cubic-bezier(.22,1,.36,1);}"
   + "@keyframes hltrise{from{transform:translateY(30px) scale(.96);opacity:0;}to{transform:none;opacity:1;}}"
@@ -236,6 +236,10 @@
   +   ".lw-qn-mc-options .lw-qn-radio-option:before{width:36px!important;height:36px!important;left:13px!important;font-size:15px!important;}"
   +   ".learnworlds-image{max-width:100%!important;border-radius:16px!important;box-shadow:0 8px 20px rgba(42,27,51,.14)!important;}"
   +   ".correct-answers-wrapper,.author-feedback-wrapper{padding:13px 15px!important;border-radius:14px!important;margin-top:10px!important;font-size:16px!important;line-height:1.45!important;}"
+  /* loze ruimte bovenaan weg (zelfde als desktop-regel 226) zodat de foto direct
+     onder de balk staat EN de indienknop binnen beeld valt. GEEN regel op de
+     indien-knop/footer/invulveld -> de v4-bug blijft uitgesloten. */
+  +   ".lw-qr-block,.lw-qr-qn,.lw-qn-cnt,.form-wrapper__inputs,.lw-qr-section-part,.lw-qn-descr,.lw-qn-decr--inner-container,.lw-qr-block>*:first-child{padding-top:0!important;margin-top:0!important;}"
   + "}";
 
   /* ---------- ebook content-pagina's (bv. Leerdoelen) ----------
