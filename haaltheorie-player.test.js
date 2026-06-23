@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.14-playful';
+  window.__HLT_PLAYER_VERSION='v6.15-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -191,7 +191,12 @@
   + ".learnworlds-button-solid-brand:active{transform:translateY(4px)!important;box-shadow:0 0 0 #B7245C!important;}"
   /* (v6.13's position:fixed op de iframe-footer werkte niet: het iframe is hoger dan
      het scherm, dus fixed pinde aan de iframe-onderkant = onder de vouw. Vervangen door
-     een vaste indien-balk in de BUITENSTE laag, zie hlt-submit-bar in SHELL_CSS.) */
+     een vaste indien-balk in de BUITENSTE laag, zie hlt-submit-bar in SHELL_CSS.)
+     De originele LearnWorlds-footer verbergen we (hij flitste kort op en viel dan weg);
+     onze buiten-balk stuurt de klik door naar de verborgen echte knop - een
+     programmatische .click() werkt ook op een onzichtbaar element. visibility:hidden
+     i.p.v. display:none zodat de knop-GEOMETRIE intact blijft (v4-bewaking geldig). */
+  + ".lw-nav-prog-wrapper{visibility:hidden!important;}"
   /* invulvraag-veld duidelijk als TEKSTVELD (was massief paars -> leek een knop).
      ALLEEN uiterlijk: witte achtergrond, donkere tekst, rand via inset box-shadow
      (verandert GEEN afmeting), leesbare placeholder, roze focus-rand. Bewust GEEN
@@ -455,13 +460,16 @@
       if(!isAssessmentDoc(doc)) return;
       if(doc.__hltGObs) return; doc.__hltGObs=true;
       var seen=false;
+      var hideNativeFooter=function(){try{var nf=doc.querySelectorAll('.lw-nav-prog-wrapper');for(var i=0;i<nf.length;i++){if(nf[i].style.visibility!=='hidden')nf[i].style.visibility='hidden';}}catch(e){}};
       var obs=new MutationObserver(function(){
+        hideNativeFooter();                                   // zo vroeg mogelijk verbergen -> geen opflits
         var fb=doc.querySelector('.correctness-badge, .correct-answers-wrapper');
         if(fb) colorAnswers(doc);
         if(fb&&!seen){seen=true;countQuestion();} else if(!fb&&seen){seen=false;}
         localizeResult(doc);
       });
       obs.observe(doc.body,{childList:true,subtree:true});
+      hideNativeFooter();
       localizeResult(doc);
     }catch(e){}
   }
