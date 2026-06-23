@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.8-playful';
+  window.__HLT_PLAYER_VERSION='v6.9-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -332,20 +332,24 @@
      verdween daardoor achter de topbar / bij scrollen. Oplossing: balk sticky
      net onder de topbar (hoogte dynamisch gemeten), eigen achtergrond + z-index,
      zodat hij altijd zichtbaar blijft. Eigen element, raakt geen LW-geometrie. */
+  /* Zelfcorrigerend: meet of de balk-bovenkant op de onderkant van de topbar zit
+     en past de margin incrementeel aan tot dat klopt. Elke tick aangeroepen, dus
+     past zich aan bij navigeren (intro -> vragen) en bij desktop/mobiel. Alleen
+     meten als we bovenaan staan (scrollTop<=2) -> geen jank bij scrollen. Niet
+     sticky (sticky gaf overlap met de foto). */
   function positionBar(bar){
     try{
       if(!bar) return;
-      var w=window.innerWidth>900?'d':'m';
-      if(bar.__hltPosW===w) return;                  // al gepositioneerd voor deze breedte-modus
       var sc=bar.closest&&bar.closest('.-second-col-content');
-      if(sc&&sc.scrollTop>2) return;                 // alleen bovenaan meten, anders jank bij scrollen
-      bar.style.marginTop='0';
+      if(sc&&sc.scrollTop>2) return;
       var tb=document.querySelector('.-second-col .-default-course-player-topbar,.-default-course-player-topbar');
       var tbBottom=tb?tb.getBoundingClientRect().bottom:45;
       var top=bar.getBoundingClientRect().top;
-      var delta=Math.round(tbBottom-top);            // duw de balk tot net onder de topbar
-      if(delta>1) bar.style.marginTop=delta+'px';
-      bar.__hltPosW=w;
+      var err=tbBottom-top;                          // hoe ver de balk nog onder de topbar moet
+      if(Math.abs(err)>3){
+        var cur=parseFloat(bar.style.marginTop)||0;
+        bar.style.marginTop=Math.max(0,Math.round(cur+err))+'px';
+      }
     }catch(e){}
   }
   function buildBar(){
@@ -643,6 +647,7 @@
     if(!document.body||!document.body.classList.contains('slug-path-player')) return;
     var f=document.getElementById('playerFrame'); if(!f)return;
     injectStyle(f); bindFrame(f); ebookFrame(f); buildBar();
+    var _gb=document.getElementById('hlt-g-bar'); if(_gb) positionBar(_gb);   // elke tick herpositioneren (intro -> vragen)
     if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;f.contentDocument.__hltEbObs=false;}}catch(e){}bindFrame(f);ebookFrame(f);renderBar();},300);});}
   }
   /* test-hook: toont de dagdoel-modal direct, zodat het deel-menu te previewen is
