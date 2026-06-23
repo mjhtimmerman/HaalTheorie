@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.6-playful';
+  window.__HLT_PLAYER_VERSION='v6.7-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -177,6 +177,13 @@
   + ".learnworlds-button-solid-brand{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-radius:16px!important;box-shadow:0 4px 0 #B7245C!important;transition:transform .06s,box-shadow .06s,filter .15s!important;}"
   + ".learnworlds-button-solid-brand:hover{filter:brightness(1.05)!important;}"
   + ".learnworlds-button-solid-brand:active{transform:translateY(4px)!important;box-shadow:0 0 0 #B7245C!important;}"
+  /* invulvraag-veld duidelijk als TEKSTVELD (was massief paars -> leek een knop).
+     ALLEEN uiterlijk: witte achtergrond, donkere tekst, rand via inset box-shadow
+     (verandert GEEN afmeting), leesbare placeholder, roze focus-rand. Bewust GEEN
+     width/padding/border/height -> de afmeting blijft gelijk, v4-bug uitgesloten. */
+  + ".learnworlds-input{background:#fff!important;color:#2A1B33!important;box-shadow:inset 0 0 0 2px #E0CCE8!important;}"
+  + ".learnworlds-input::placeholder{color:#9A7E8C!important;opacity:1!important;}"
+  + ".learnworlds-input:focus{box-shadow:inset 0 0 0 2px #E43777!important;outline:none!important;}"
   /* feedback na beantwoorden: soepel in-faden i.p.v. harde sprong + nette kaders
      (.correct-answers-wrapper = 'Juist antwoord', .author-feedback-wrapper = 'Uitleg') */
   + ".correct-answers-wrapper,.author-feedback-wrapper{border-radius:16px!important;padding:14px 16px!important;margin-top:12px!important;animation:hltfb .3s cubic-bezier(.22,1,.36,1) both!important;}"
@@ -194,6 +201,15 @@
   + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option{background:#FCE8EC!important;border-color:#E4607A!important;border-bottom-color:#D23A5A!important;color:#B0203C!important;}"
   + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option-lbl{color:#B0203C!important;}"
   + ".lw-qn-mc-options .hlt-wrong .lw-qn-radio-option:before{background:#D23A5A!important;border-color:#D23A5A!important;color:#fff!important;}"
+  /* resultaatscherm (geslaagd/gezakt): merk-kaart + branded rond icoon (rood bij
+     gezakt, groen bij geslaagd) i.p.v. de harde zwarte X, Inter-typografie. Alleen
+     uiterlijk; de Nederlandse titel zet localizeResult() (JS). */
+  + ".lw-ass-end-2{max-width:460px!important;margin:24px auto!important;background:#fff!important;border:1px solid #F0E3E8!important;border-radius:24px!important;box-shadow:0 18px 50px rgba(42,27,51,.12)!important;font-family:'Inter',-apple-system,sans-serif!important;}"
+  + ".lw-ass-end-2 .lw-ass-end-icon-text .learnworlds-icon{display:flex!important;align-items:center!important;justify-content:center!important;width:84px!important;height:84px!important;border-radius:50%!important;font-size:40px!important;line-height:1!important;margin:6px auto 16px!important;}"
+  + ".lw-ass-end-2 .learnworlds-icon.fa-times,.lw-ass-end-2 .learnworlds-icon.fa-times-circle{color:#D23A5A!important;background:#FCE8EC!important;}"
+  + ".lw-ass-end-2 .learnworlds-icon.fa-check,.lw-ass-end-2 .learnworlds-icon.fa-check-circle,.lw-ass-end-2 .learnworlds-icon.fa-trophy,.lw-ass-end-2 .learnworlds-icon.fa-thumbs-up{color:#2FA877!important;background:#E1F5EE!important;}"
+  + ".lw-ass-end-2 h3.learnworlds-heading3{font-family:'Inter',sans-serif!important;font-weight:900!important;color:#2A1B33!important;font-size:25px!important;letter-spacing:-.01em!important;}"
+  + ".lw-ass-end-2 .learnworlds-main-text,.lw-ass-end-2 strong,.lw-ass-end-2 p{font-family:'Inter',-apple-system,sans-serif!important;color:#2A1B33!important;}"
   /* desktop (>=760px): foto + vraag + opties als brede, uitgelijnde kolom (max
      880px), foto vult de volle kolombreedte zodat 'ie gelijk loopt met de opties,
      en de loze ruimte erboven weg zodat alles in 1 scherm past. Bewust min-width:
@@ -311,6 +327,23 @@
    +'</div></div>'
    +'<div class="hlt-g-stories" id="hlt-stories"></div>';
 
+  /* De LearnWorlds-topbar is position:absolute (top:0) en overlapt de bovenkant
+     van het scroll-gebied. De gamification-balk staat in de flow daaronder en
+     verdween daardoor achter de topbar / bij scrollen. Oplossing: balk sticky
+     net onder de topbar (hoogte dynamisch gemeten), eigen achtergrond + z-index,
+     zodat hij altijd zichtbaar blijft. Eigen element, raakt geen LW-geometrie. */
+  function positionBar(bar){
+    try{
+      if(!bar) return;
+      var tb=document.querySelector('.-second-col .-default-course-player-topbar,.-default-course-player-topbar');
+      var tbh=tb?Math.round(tb.getBoundingClientRect().height):45;
+      bar.style.position='sticky';
+      bar.style.top=tbh+'px';
+      bar.style.zIndex='6';
+      bar.style.background='var(--hlt-bg)';
+      bar.style.marginTop='0';
+    }catch(e){}
+  }
   function buildBar(){
     if(document.getElementById('hlt-g-bar')) return true;
     var frame=document.getElementById('playerFrame'); if(!frame||!frame.parentElement) return false;
@@ -319,7 +352,7 @@
     var st=bar.querySelector('#hlt-stories'),h='',i;
     for(i=0;i<GOAL;i++)h+='<div class="hlt-g-seg"><span></span></div>';
     st.innerHTML=h;
-    renderBar(); return true;
+    positionBar(bar); renderBar(); return true;
   }
   function renderBar(){
     var bar=document.getElementById('hlt-g-bar'); if(!bar)return; var s=norm(load());
@@ -331,6 +364,7 @@
     var g=bar.querySelector('#hlt-goaltxt'); if(g)g.textContent=cnt+'/'+GOAL;
     var segs=bar.querySelectorAll('.hlt-g-seg'),i;
     for(i=0;i<segs.length;i++)segs[i].className='hlt-g-seg'+(i<cnt?' done':'');
+    positionBar(bar);
   }
   function haptic(){if(navigator.vibrate){try{navigator.vibrate(25);}catch(e){}}}
   function xpPop(a){var bar=document.getElementById('hlt-g-bar');if(!bar)return;var an=bar.querySelector('#hlt-xp')||bar,r=an.getBoundingClientRect();var p=document.createElement('div');p.className='hlt-xp-pop';p.textContent='+'+a+' XP';p.style.left=r.left+'px';p.style.top=(r.top-6)+'px';document.body.appendChild(p);setTimeout(function(){p.remove();},1000);}
@@ -375,6 +409,19 @@
       }
     }catch(e){}
   }
+  /* resultaatscherm: Engelse titel -> Nederlands. Idempotent: na vertaling matcht
+     de Engelse tekst niet meer. Pass/fail o.b.v. de titeltekst of het fa-icoon. */
+  function localizeResult(doc){
+    try{
+      var h=doc.querySelector('.lw-ass-end-2 h3.learnworlds-heading3,.lw-ass-end-icon-text h3');
+      if(!h) return;
+      var t=(h.textContent||'').trim();
+      var fail=/failed|sorry|jammer|helaas/i.test(t)||!!doc.querySelector('.lw-ass-end-2 .learnworlds-icon.fa-times,.lw-ass-end-2 .learnworlds-icon.fa-times-circle');
+      var pass=/passed|congrat|well done|success|geslaagd|gefeliciteerd/i.test(t)||!!doc.querySelector('.lw-ass-end-2 .learnworlds-icon.fa-check,.lw-ass-end-2 .learnworlds-icon.fa-check-circle,.lw-ass-end-2 .learnworlds-icon.fa-trophy');
+      if(pass && t.indexOf('Gefeliciteerd')<0){ h.textContent='Gefeliciteerd, geslaagd!'; }
+      else if(fail && t.indexOf('Helaas')<0){ h.textContent='Helaas, net niet gehaald'; }
+    }catch(e){}
+  }
   function bindFrame(frame){
     try{
       var doc=frame.contentDocument;
@@ -385,8 +432,10 @@
         var fb=doc.querySelector('.correctness-badge, .correct-answers-wrapper');
         if(fb) colorAnswers(doc);
         if(fb&&!seen){seen=true;countQuestion();} else if(!fb&&seen){seen=false;}
+        localizeResult(doc);
       });
       obs.observe(doc.body,{childList:true,subtree:true});
+      localizeResult(doc);
     }catch(e){}
   }
   function injectStyle(frame){
