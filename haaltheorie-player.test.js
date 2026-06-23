@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.12-playful';
+  window.__HLT_PLAYER_VERSION='v6.13-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -180,6 +180,14 @@
   + ".learnworlds-button-solid-brand{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-radius:16px!important;box-shadow:0 4px 0 #B7245C!important;transition:transform .06s,box-shadow .06s,filter .15s!important;}"
   + ".learnworlds-button-solid-brand:hover{filter:brightness(1.05)!important;}"
   + ".learnworlds-button-solid-brand:active{transform:translateY(4px)!important;box-shadow:0 0 0 #B7245C!important;}"
+  /* indienknop-FOOTER als vaste balk onderaan het scherm (binnen het iframe).
+     position:fixed pint aan de iframe-viewport, dus de knop blijft ALTIJD zichtbaar,
+     ook als de inhoud langer is dan het scherm (dat was de oorzaak: footer viel onder
+     de iframe-hoogte en was niet te scrollen). BEWUST GEEN width/min-width/padding op
+     de KNOP zelf -> knop-afmeting ongewijzigd, de v4-bug (width:100% op de knop) blijft
+     uitgesloten. body krijgt onder-padding zodat de laatste optie niet onder de balk valt. */
+  + ".lw-nav-prog-wrapper{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:40!important;background:var(--hlt-bg)!important;border-top:1px solid var(--hlt-line)!important;box-shadow:0 -3px 14px rgba(42,27,51,.07)!important;padding:10px 16px!important;margin:0!important;}"
+  + "body{padding-bottom:88px!important;}"
   /* invulvraag-veld duidelijk als TEKSTVELD (was massief paars -> leek een knop).
      ALLEEN uiterlijk: witte achtergrond, donkere tekst, rand via inset box-shadow
      (verandert GEEN afmeting), leesbare placeholder, roze focus-rand. Bewust GEEN
