@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.11-playful';
+  window.__HLT_PLAYER_VERSION='v6.12-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -100,7 +100,7 @@
   + "body.slug-path-player .lrn-path-chapter-name{border-radius:14px!important;padding:10px 12px!important;transition:background .15s!important;}"
   + "body.slug-path-player .lrn-path-chapter-name:hover{background:var(--hlt-soft)!important;}"
   + "body.slug-path-player .lrn-path-chapter-selected>.lrn-path-chapter-name,body.slug-path-player .lrn-path-chapter-open>.lrn-path-chapter-name{background:var(--hlt-soft)!important;}"
-  + "body.slug-path-player .lrn-path-chapter-name-num{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:28px!important;height:28px!important;padding:0 7px!important;border-radius:10px!important;background:var(--hlt-grad)!important;color:#fff!important;font-weight:900!important;font-size:13px!important;margin-right:9px!important;}"
+  + "body.slug-path-player .lrn-path-chapter-name-num{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:28px!important;min-width:28px!important;height:28px!important;padding:0!important;border-radius:10px!important;background:var(--hlt-grad)!important;color:#fff!important;font-weight:900!important;font-size:13px!important;line-height:1!important;text-align:center!important;margin-right:9px!important;}"
   + "body.slug-path-player .lrn-path-chapter-name-txt{font-weight:800!important;color:var(--hlt-ink)!important;}"
   + "body.slug-path-player .lrn-path-completion-circle.completed{color:#0F6E56!important;}"
   + "body.slug-path-player .lrn-path-completion-circle.failed{color:#C0344E!important;}"
@@ -648,9 +648,25 @@
   }
 
   /* ---------- main loop ---------- */
+  /* hoofdstuk-menu: LearnWorlds zet het nummer als "1." (met punt) in de gradient-
+     badge. Strip de punt zodat alleen het cijfer overblijft (gecentreerd, clean).
+     Idempotent + geguard: alleen aanpassen als er echt een punt op het eind staat. */
+  function cleanChapterNums(){
+    try{
+      var ns=document.querySelectorAll('.lrn-path-chapter-name-num');
+      for(var i=0;i<ns.length;i++){
+        var el=ns[i],t=(el.textContent||'');
+        if(/[.·\s]+$/.test(t)){
+          var clean=t.replace(/[.·\s]+$/,'');
+          if(clean&&clean!==el.textContent) el.textContent=clean;
+        }
+      }
+    }catch(e){}
+  }
   function tick(){
     injectShell();
     renderAccountWidget();
+    cleanChapterNums();
     if(!document.body||!document.body.classList.contains('slug-path-player')) return;
     var f=document.getElementById('playerFrame'); if(!f)return;
     injectStyle(f); bindFrame(f); ebookFrame(f); buildBar();
