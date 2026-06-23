@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.13-playful';
+  window.__HLT_PLAYER_VERSION='v6.14-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -126,6 +126,15 @@
   + ".hlt-xp-pop{position:fixed;font-weight:900;font-size:22px;color:#E43777;pointer-events:none;z-index:99999;animation:hltxp 1s ease-out forwards;font-family:'Inter',-apple-system,sans-serif;}"
   + "@keyframes hltxp{0%{opacity:0;transform:translateY(0) scale(.6);}20%{opacity:1;transform:translateY(-10px) scale(1.1);}100%{opacity:0;transform:translateY(-60px) scale(1);}}"
   + "@media(max-width:600px){.hlt-g-chip .t{display:none;}.hlt-g-goal{font-size:12px;gap:6px;}.hlt-g-goal span.lbl{display:inline;}}"
+  /* vaste indien-balk in de BUITENSTE laag (de speler is wel schermhoogte): pint
+     onderaan .-second-col, altijd zichtbaar; klik stuurt een klik naar de echte knop
+     in het iframe. .-second-col-content krijgt onder-padding zodat je tot onder de
+     laatste optie kunt scrollen zonder dat de balk inhoud afdekt. */
+  + ".hlt-submit-bar{position:absolute;left:0;right:0;bottom:0;z-index:30;display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:var(--hlt-bg);border-top:1px solid var(--hlt-line);box-shadow:0 -3px 14px rgba(42,27,51,.07);box-sizing:border-box;font-family:'Inter',-apple-system,sans-serif;}"
+  + ".hlt-sb-prog{font-weight:700;color:#9A7E8C;font-size:14px;white-space:nowrap;}"
+  + ".hlt-sb-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#FB7171,#E43777);color:#fff;border:none;border-radius:14px;padding:12px 24px;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 0 #B7245C;font-family:'Inter',-apple-system,sans-serif;transition:transform .06s,box-shadow .06s;}"
+  + ".hlt-sb-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #B7245C;}"
+  + "body.slug-path-player .-second-col-content{padding-bottom:80px!important;}"
   + ".hlt-ovl{position:fixed;inset:0;background:rgba(42,27,51,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100000;padding:20px;font-family:'Inter',-apple-system,sans-serif;}.hlt-ovl.show{display:flex;}"
   + ".hlt-res{width:100%;max-width:380px;background:#fff;border-radius:26px;padding:28px 24px;text-align:center;box-shadow:0 30px 80px rgba(42,27,51,.4);animation:hltrise .4s cubic-bezier(.22,1,.36,1);}"
   + "@keyframes hltrise{from{transform:translateY(30px) scale(.96);opacity:0;}to{transform:none;opacity:1;}}"
@@ -180,14 +189,9 @@
   + ".learnworlds-button-solid-brand{background:linear-gradient(135deg,#FB7171,#E43777)!important;color:#fff!important;border-radius:16px!important;box-shadow:0 4px 0 #B7245C!important;transition:transform .06s,box-shadow .06s,filter .15s!important;}"
   + ".learnworlds-button-solid-brand:hover{filter:brightness(1.05)!important;}"
   + ".learnworlds-button-solid-brand:active{transform:translateY(4px)!important;box-shadow:0 0 0 #B7245C!important;}"
-  /* indienknop-FOOTER als vaste balk onderaan het scherm (binnen het iframe).
-     position:fixed pint aan de iframe-viewport, dus de knop blijft ALTIJD zichtbaar,
-     ook als de inhoud langer is dan het scherm (dat was de oorzaak: footer viel onder
-     de iframe-hoogte en was niet te scrollen). BEWUST GEEN width/min-width/padding op
-     de KNOP zelf -> knop-afmeting ongewijzigd, de v4-bug (width:100% op de knop) blijft
-     uitgesloten. body krijgt onder-padding zodat de laatste optie niet onder de balk valt. */
-  + ".lw-nav-prog-wrapper{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:40!important;background:var(--hlt-bg)!important;border-top:1px solid var(--hlt-line)!important;box-shadow:0 -3px 14px rgba(42,27,51,.07)!important;padding:10px 16px!important;margin:0!important;}"
-  + "body{padding-bottom:88px!important;}"
+  /* (v6.13's position:fixed op de iframe-footer werkte niet: het iframe is hoger dan
+     het scherm, dus fixed pinde aan de iframe-onderkant = onder de vouw. Vervangen door
+     een vaste indien-balk in de BUITENSTE laag, zie hlt-submit-bar in SHELL_CSS.) */
   /* invulvraag-veld duidelijk als TEKSTVELD (was massief paars -> leek een knop).
      ALLEEN uiterlijk: witte achtergrond, donkere tekst, rand via inset box-shadow
      (verandert GEEN afmeting), leesbare placeholder, roze focus-rand. Bewust GEEN
@@ -671,13 +675,48 @@
       }
     }catch(e){}
   }
+  /* vaste indien-balk in de buitenste laag. De echte footer/knop zit in het iframe en
+     dat iframe is hoger dan het scherm, dus die knop valt onder de vouw. Deze balk staat
+     in de speler zelf (schermhoogte) en stuurt op klik een klik naar de echte knop in het
+     iframe. Alleen tonen op vraag-schermen (waar een submit-knop bestaat). */
+  function buildSubmitBar(){
+    try{
+      var col=document.querySelector('.-second-col'); if(!col) return;
+      var f=document.getElementById('playerFrame'); var doc=f&&f.contentDocument;
+      var realBtn=null,isQ=false;
+      try{
+        if(doc){
+          realBtn=doc.querySelector('.lw-nav-prog-wrapper .learnworlds-button-solid-brand')||doc.querySelector('.learnworlds-button-solid-brand');
+          isQ=!!doc.querySelector('.lw-qn-cnt,.lw-qn-mc-options,.lw-qn-descr,.learnworlds-input');
+        }
+      }catch(e){}
+      var bar=document.getElementById('hlt-submit-bar');
+      if(!(realBtn&&isQ&&isAssessmentDoc(doc))){ if(bar) bar.style.display='none'; return; }
+      if(!bar){
+        bar=document.createElement('div'); bar.id='hlt-submit-bar'; bar.className='hlt-submit-bar';
+        bar.innerHTML='<span class="hlt-sb-prog" id="hlt-sb-prog"></span><button class="hlt-sb-btn" id="hlt-sb-btn" type="button">Indienen <span aria-hidden="true">→</span></button>';
+        col.appendChild(bar);
+        bar.querySelector('#hlt-sb-btn').addEventListener('click',function(){
+          try{
+            var d=document.getElementById('playerFrame').contentDocument;
+            var rb=d&&(d.querySelector('.lw-nav-prog-wrapper .learnworlds-button-solid-brand')||d.querySelector('.learnworlds-button-solid-brand'));
+            if(rb) rb.click();
+          }catch(e){}
+          haptic();
+        });
+      }
+      bar.style.display='flex';
+      var pt=bar.querySelector('#hlt-sb-prog');
+      try{ var prog=doc.querySelector('.lw-qr-nav-wrapper'); if(prog&&pt){ var tx=(prog.textContent||'').trim(); if(tx) pt.textContent=tx; } }catch(e){}
+    }catch(e){}
+  }
   function tick(){
     injectShell();
     renderAccountWidget();
     cleanChapterNums();
     if(!document.body||!document.body.classList.contains('slug-path-player')) return;
     var f=document.getElementById('playerFrame'); if(!f)return;
-    injectStyle(f); bindFrame(f); ebookFrame(f); buildBar();
+    injectStyle(f); bindFrame(f); ebookFrame(f); buildBar(); buildSubmitBar();
     var _gb=document.getElementById('hlt-g-bar'); if(_gb) positionBar(_gb);   // elke tick herpositioneren (intro -> vragen)
     if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;f.contentDocument.__hltEbObs=false;}}catch(e){}bindFrame(f);ebookFrame(f);renderBar();},300);});}
   }
