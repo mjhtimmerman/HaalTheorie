@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.15-playful';
+  window.__HLT_PLAYER_VERSION='v6.16-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -726,7 +726,21 @@
     var f=document.getElementById('playerFrame'); if(!f)return;
     injectStyle(f); bindFrame(f); ebookFrame(f); buildBar(); buildSubmitBar();
     var _gb=document.getElementById('hlt-g-bar'); if(_gb) positionBar(_gb);   // elke tick herpositioneren (intro -> vragen)
-    if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;f.contentDocument.__hltEbObs=false;}}catch(e){}bindFrame(f);ebookFrame(f);renderBar();},300);});}
+    /* Anti-sprong: LearnWorlds bouwt bij elke nieuwe vraag het content-gebied opnieuw op,
+       waardoor onze banner verdwijnt; de tick zette 'm pas ~1s later terug (zichtbare sprong).
+       Deze waarnemer herplaatst de banner DIRECT (in dezelfde microtask, vóór de browser
+       opnieuw tekent) zodra het content-gebied wijzigt, zodat er niets verspringt. */
+    if(!window.__hltReinsObs){
+      var stable=document.querySelector('.-second-col');
+      if(stable&&window.MutationObserver){
+        window.__hltReinsObs=new MutationObserver(function(){
+          if(!document.getElementById('hlt-g-bar')&&document.getElementById('playerFrame')){ buildBar(); }
+          if(!document.getElementById('hlt-submit-bar')){ buildSubmitBar(); }
+        });
+        window.__hltReinsObs.observe(stable,{childList:true,subtree:true});
+      }
+    }
+    if(!f.__hltLoadBound){f.__hltLoadBound=true;f.addEventListener('load',function(){setTimeout(function(){injectStyle(f);try{if(f.contentDocument){f.contentDocument.__hltGObs=false;f.contentDocument.__hltEbObs=false;}}catch(e){}bindFrame(f);ebookFrame(f);buildBar();buildSubmitBar();renderBar();},60);});}
   }
   /* test-hook: toont de dagdoel-modal direct, zodat het deel-menu te previewen is
      zonder eerst 10 vragen te beantwoorden. Bv: __HLT_DEMO_CELEBRATE({streak:7,xp:140}) */
