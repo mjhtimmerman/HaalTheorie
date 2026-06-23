@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.7-playful';
+  window.__HLT_PLAYER_VERSION='v6.8-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -112,14 +112,14 @@
   + "body.slug-path-player #playerFrame{margin-top:0!important;}"
   + "body.slug-path-player .default-course-player-nav-btn{font-family:'Inter',-apple-system,sans-serif!important;font-weight:700!important;}"
   + "body.slug-path-player .default-course-player-nav-btn:hover{color:var(--hlt-accent)!important;}"
-  + ".hlt-g-bar{max-width:720px;margin:18px auto 0;padding:0 20px;width:100%;box-sizing:border-box;font-family:'Inter',-apple-system,sans-serif;}"
-  + ".hlt-g-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}"
+  + ".hlt-g-bar{width:100%;padding:10px 0 8px;box-sizing:border-box;background:var(--hlt-bg);border-bottom:1px solid var(--hlt-line);font-family:'Inter',-apple-system,sans-serif;}"
+  + ".hlt-g-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 auto 10px;max-width:760px;padding:0 18px;box-sizing:border-box;}"
   + ".hlt-g-chips{display:flex;gap:10px;}"
   + ".hlt-g-chip{display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;padding:7px 13px;border-radius:99px;}"
   + ".hlt-g-chip.streak{background:#FFF1E3;color:#C8730E;}.hlt-g-chip.xp{background:#F1ECFD;color:#5B36C4;}"
   + ".hlt-g-goal{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#9A7E8C;}"
   + ".hlt-g-ring{width:34px;height:34px;transform:rotate(-90deg);}.hlt-g-ring circle{fill:none;stroke-width:5;}.hlt-g-ring .bgc{stroke:#F0E3E8;}.hlt-g-ring .fg{stroke:#E43777;stroke-linecap:round;transition:stroke-dashoffset .5s cubic-bezier(.22,1,.36,1);}"
-  + ".hlt-g-stories{display:flex;gap:5px;}.hlt-g-seg{flex:1;height:7px;border-radius:99px;background:#F0E3E8;overflow:hidden;}.hlt-g-seg span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(135deg,#5937B0,#E43777,#FB7171);transition:width .4s ease;}.hlt-g-seg.done span{width:100%;}"
+  + ".hlt-g-stories{display:flex;gap:5px;max-width:760px;margin:0 auto;padding:0 18px;box-sizing:border-box;}.hlt-g-seg{flex:1;height:7px;border-radius:99px;background:#F0E3E8;overflow:hidden;}.hlt-g-seg span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(135deg,#5937B0,#E43777,#FB7171);transition:width .4s ease;}.hlt-g-seg.done span{width:100%;}"
   + ".hlt-xp-pop{position:fixed;font-weight:900;font-size:22px;color:#E43777;pointer-events:none;z-index:99999;animation:hltxp 1s ease-out forwards;font-family:'Inter',-apple-system,sans-serif;}"
   + "@keyframes hltxp{0%{opacity:0;transform:translateY(0) scale(.6);}20%{opacity:1;transform:translateY(-10px) scale(1.1);}100%{opacity:0;transform:translateY(-60px) scale(1);}}"
   + "@media(max-width:600px){.hlt-g-chip .t,.hlt-g-goal span.lbl{display:none;}}"
@@ -274,7 +274,7 @@
   }
 
   /* ---------- state ---------- */
-  var GOAL=10, XP_PER=5, KEY='hlt_gamify_v1';
+  var GOAL=50, SEGMENTS=10, XP_PER=5, KEY='hlt_gamify_v1';
   function dstr(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
   function today(){return dstr(new Date());}
   function yesterday(){var d=new Date();d.setDate(d.getDate()-1);return dstr(d);}
@@ -335,13 +335,17 @@
   function positionBar(bar){
     try{
       if(!bar) return;
-      var tb=document.querySelector('.-second-col .-default-course-player-topbar,.-default-course-player-topbar');
-      var tbh=tb?Math.round(tb.getBoundingClientRect().height):45;
-      bar.style.position='sticky';
-      bar.style.top=tbh+'px';
-      bar.style.zIndex='6';
-      bar.style.background='var(--hlt-bg)';
+      var w=window.innerWidth>900?'d':'m';
+      if(bar.__hltPosW===w) return;                  // al gepositioneerd voor deze breedte-modus
+      var sc=bar.closest&&bar.closest('.-second-col-content');
+      if(sc&&sc.scrollTop>2) return;                 // alleen bovenaan meten, anders jank bij scrollen
       bar.style.marginTop='0';
+      var tb=document.querySelector('.-second-col .-default-course-player-topbar,.-default-course-player-topbar');
+      var tbBottom=tb?tb.getBoundingClientRect().bottom:45;
+      var top=bar.getBoundingClientRect().top;
+      var delta=Math.round(tbBottom-top);            // duw de balk tot net onder de topbar
+      if(delta>1) bar.style.marginTop=delta+'px';
+      bar.__hltPosW=w;
     }catch(e){}
   }
   function buildBar(){
@@ -350,7 +354,7 @@
     var bar=document.createElement('div'); bar.id='hlt-g-bar'; bar.className='hlt-g-bar'; bar.innerHTML=BAR_HTML;
     frame.parentElement.insertBefore(bar,frame);
     var st=bar.querySelector('#hlt-stories'),h='',i;
-    for(i=0;i<GOAL;i++)h+='<div class="hlt-g-seg"><span></span></div>';
+    for(i=0;i<SEGMENTS;i++)h+='<div class="hlt-g-seg"><span></span></div>';
     st.innerHTML=h;
     positionBar(bar); renderBar(); return true;
   }
@@ -362,8 +366,8 @@
     var cnt=Math.min(s.count||0,GOAL),c=2*Math.PI*15;
     var r=bar.querySelector('#hlt-ring'); if(r)r.style.strokeDashoffset=c*(1-cnt/GOAL);
     var g=bar.querySelector('#hlt-goaltxt'); if(g)g.textContent=cnt+'/'+GOAL;
-    var segs=bar.querySelectorAll('.hlt-g-seg'),i;
-    for(i=0;i<segs.length;i++)segs[i].className='hlt-g-seg'+(i<cnt?' done':'');
+    var segs=bar.querySelectorAll('.hlt-g-seg'),i,fill=Math.floor(cnt/GOAL*segs.length);
+    for(i=0;i<segs.length;i++)segs[i].className='hlt-g-seg'+(i<fill?' done':'');
     positionBar(bar);
   }
   function haptic(){if(navigator.vibrate){try{navigator.vibrate(25);}catch(e){}}}
