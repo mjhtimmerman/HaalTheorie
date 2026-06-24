@@ -5,7 +5,7 @@
    (/start). Het blok levert e-mail en voornaam via merge-tags:
 
      <div id="hlt-acct-wrap" data-email="{{user.email}}" data-name="{{user.first_name}}"></div>
-     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=5" defer></script>
+     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=6" defer></script>
 
    De widget rendert IN dat blok: begroeting (avatar 👋 + naam), tegels
    (streak, XP, dagdoel, uren), examen-plan-blok (datum kiezen -> aftellen),
@@ -127,17 +127,19 @@
   + ".hlt-acct .cd-empty{font-size:24px;font-weight:900;line-height:1.15;color:#2A1B33;}"
   + ".hlt-acct .sub{font-size:13px;font-weight:600;color:#9A7E8C;margin-top:6px;}"
   + ".hlt-acct .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;align-items:stretch;}"
-  + ".hlt-acct .btn,.hlt-acct .ghost{flex:1 1 0;min-width:170px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:14px;padding:15px 18px;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer;line-height:1;border:2px solid transparent;}"
-  + ".hlt-acct .btn{background:linear-gradient(135deg,#6A2BB0,#B7245C);color:#fff;box-shadow:0 4px 0 #4E1F8A;}"
+  + ".hlt-acct .btn,.hlt-acct .ghost{flex:1 1 0;min-width:170px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:14px;padding:15px 18px;font-weight:800;font-size:15px;text-decoration:none!important;cursor:pointer;line-height:1;border:2px solid transparent;}"
+  + ".hlt-acct .btn{background:linear-gradient(135deg,#6A2BB0,#B7245C);color:#fff!important;box-shadow:0 4px 0 #4E1F8A;}"
+  + ".hlt-acct .btn,.hlt-acct .btn *{color:#fff!important;}"
   + ".hlt-acct .btn .ce,.hlt-acct .ghost .ce{font-size:18px;}"
-  + ".hlt-acct .ghost{background:#fff;color:#C01F5E;border:2px solid #E8A9C4;box-shadow:0 4px 0 #E8A9C4;}"
+  + ".hlt-acct .ghost{background:#fff!important;border:2px solid #E8A9C4;box-shadow:0 4px 0 #E8A9C4;}"
+  + ".hlt-acct .ghost,.hlt-acct .ghost *{color:#C01F5E!important;}"
   + ".hlt-acct .ghost .ar{font-size:18px;font-weight:900;}"
   + ".hlt-acct .hint{font-size:12px;font-weight:600;color:#A98EA0;margin-top:12px;}"
   + ".hlt-acct .exam-filled{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between;}"
   + ".hlt-acct .exam-filled .btn{flex:0 0 auto;min-width:0;}"
   + ".hlt-acct .cd{font-size:40px;font-weight:900;line-height:1;color:#2A1B33;}"
   + ".hlt-acct .cd small{display:block;font-size:13px;font-weight:700;color:#9A7E8C;margin-top:5px;}"
-  + ".hlt-acct .replan{margin-top:12px;background:none;border:none;padding:0;color:#C01F5E;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}"
+  + ".hlt-acct .replan{margin-top:12px;background:none!important;border:none;padding:0;color:#C01F5E!important;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:none!important;}"
   + ".hlt-acct .exdate{position:absolute!important;width:1px!important;height:1px!important;min-width:0!important;max-width:1px!important;padding:0!important;margin:-1px!important;border:0!important;opacity:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;pointer-events:none!important;}"
   /* week + mijlpalen */
   + ".hlt-acct .week{display:flex;gap:6px;justify-content:space-between;}"
