@@ -1,15 +1,17 @@
 /* =====================================================================
    HaalTheorie - account-pagina gamification widget (Duolingo-stijl)
    ---------------------------------------------------------------------
-   Toont op de LearnWorlds Account system-page (/start) een compacte
-   tegelrij (streak, XP, dagdoel, uren), een streak-kalender en mijlpalen.
-   Cross-device: haalt streak/XP/dagdoel bij de Supabase edge function
-   (action:"get") met de e-mail uit de lw-identity div. De 'uren' worden
-   overgenomen uit het standaard LearnWorlds-statblok, dat daarna verborgen
-   wordt zodat er geen dubbele cijfers staan. Puur additief, laadt los.
+   Bedoeld als HTML custom code block op de LearnWorlds Account-pagina
+   (/start). Het blok levert e-mail en naam via merge-tags:
 
-   Plaatsen: LearnWorlds /start -> Page custom code -> Before </body>:
-     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=1" defer></script>
+     <div id="hlt-acct-wrap" data-email="{{user.email}}" data-name="{{user.username}}"></div>
+     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=3" defer></script>
+
+   De widget rendert IN dat blok: begroeting (avatar + naam), tegels
+   (streak, XP, dagdoel, uren), week-kalender en mijlpalen. streak/XP/dagdoel
+   komen cross-device van de Supabase edge function (action:"get"); de uren
+   worden overgenomen uit het standaard LearnWorlds User-Stats-element, dat
+   daarna visueel verborgen wordt. Puur additief, laadt los.
 
    Merkstijl: gradient #5937B0 #9B2F8F #E43777 #FB7171, accent #E43777,
    achtergrond #FFF8F4, Inter.
@@ -22,17 +24,28 @@
   var GOAL = 50;
   var DAYL = ['ma','di','wo','do','vr','za','zo'];
 
-  /* ---------- helpers ---------- */
+  var wrap = document.getElementById('hlt-acct-wrap');   // het HTML-blok met de merge-tags
+
+  /* ---------- gegevens (merge-tags uit het blok, val terug op lw-identity) ---------- */
+  function clean(v){ v = (v==null?'':String(v)).trim(); return (v.indexOf('{{')>-1) ? '' : v; }
   function getEmail(){
-    var el = document.getElementById('lw-identity');
-    var e = el ? String(el.getAttribute('data-email')||'').trim().toLowerCase() : '';
-    if(!e || e.indexOf('{{')>-1 || e.indexOf('@')===-1) return null;
-    return e;
+    var e = wrap ? clean(wrap.getAttribute('data-email')).toLowerCase() : '';
+    if(!e || e.indexOf('@')===-1){
+      var el = document.getElementById('lw-identity');
+      e = el ? clean(el.getAttribute('data-email')).toLowerCase() : '';
+    }
+    return (e && e.indexOf('@')>-1) ? e : null;
   }
+  function getName(){
+    var n = wrap ? clean(wrap.getAttribute('data-name')) : '';
+    return n || null;
+  }
+
+  /* ---------- helpers ---------- */
   function dstr(d){ return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
   function esc(n){ n = parseInt(n,10); return isNaN(n)?0:n; }
 
-  /* ---------- LearnWorlds-stat overnemen (uren) + origineel blok verbergen ---------- */
+  /* ---------- uren overnemen uit LearnWorlds User-Stats + dat blok verbergen ---------- */
   function numNear(el){
     var p = el;
     for(var k=0;k<4&&p;k++){
@@ -45,31 +58,40 @@
     }
     return null;
   }
+  function blockedCard(el){
+    return !el || el===document.body || el===document.documentElement
+      || el.id==='hlt-acct-wrap'
+      || (el.querySelector && el.querySelector('#hlt-acct-wrap'))    // NOOIT iets verbergen dat onze widget bevat
+      || (el.matches && el.matches('main,[role=main],.lw-main-content,#lw-main,.lw-page-content,#content,#wrapper'));
+  }
+  function pickCard(label){
+    var p = label.parentElement;
+    if(!p || blockedCard(p)) return null;
+    for(var k=0;k<5 && p.parentElement && !blockedCard(p.parentElement); k++) p = p.parentElement; // klim tot net onder de grens
+    return blockedCard(p) ? null : p;
+  }
   function readLw(){
-    var out = {uren:null, card:null};
-    var lblUren = null, lblProg = null;
+    var lblUren = null;
     var els = document.body.querySelectorAll('*');
     for(var i=0;i<els.length;i++){
       var el = els[i];
       if(el.children.length || (el.closest && el.closest('#hlt-acct-wrap'))) continue;
       var t = (el.textContent||'').trim().toLowerCase();
-      if(!lblUren && (t==='uren'||t==='uur')) lblUren = el;
-      if(!lblProg && (t==='programma'||t==="programma's"||t==='programmas'||t==='cursussen')) lblProg = el;
+      if(t==='uren'||t==='uur'){ lblUren = el; break; }
     }
-    if(lblUren){
-      out.uren = numNear(lblUren);
-      var p = lblUren.parentElement;                       // kaartje = dichtstbijzijnde ouder met beide labels
-      for(var k=0;k<6&&p;k++){ if(lblProg && p.contains(lblProg)){ out.card = p; break; } p = p.parentElement; }
-      if(!out.card){ var q = lblUren.parentElement; for(var m=0;m<2&&q&&q.parentElement;m++) q = q.parentElement; out.card = q; }
-    }
-    return out;
+    if(!lblUren) return {uren:null, card:null};
+    return {uren:numNear(lblUren), card:pickCard(lblUren)};
   }
 
   /* ---------- styles ---------- */
   var CSS =
     "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');"
-  + ".hlt-acct{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#2A1B33;max-width:680px;margin:22px auto;padding:0 16px;box-sizing:border-box;}"
+  + "#hlt-acct-wrap.hlt-acct{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#2A1B33;max-width:680px;margin:8px auto;padding:0;box-sizing:border-box;}"
   + ".hlt-acct *{box-sizing:border-box;}"
+  + ".hlt-acct .greet{display:flex;align-items:center;gap:14px;margin-bottom:16px;}"
+  + ".hlt-acct .avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#5937B0 0%,#9B2F8F 40%,#E43777 72%,#FB7171 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:900;box-shadow:0 8px 20px rgba(228,55,119,.25);flex:0 0 auto;}"
+  + ".hlt-acct .gtxt .hi{font-size:12px;font-weight:800;color:#9A7E8C;text-transform:uppercase;letter-spacing:.05em;}"
+  + ".hlt-acct .gtxt .name{font-size:25px;font-weight:900;line-height:1.1;}"
   + ".hlt-acct .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}"
   + ".hlt-acct .tile{background:#fff;border:2px solid #F0E3E8;border-bottom-width:4px;border-radius:18px;padding:16px 8px 14px;text-align:center;min-height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}"
   + ".hlt-acct .tile.streak{background:linear-gradient(135deg,#5937B0 0%,#9B2F8F 40%,#E43777 72%,#FB7171 100%);border-color:transparent;color:#fff;box-shadow:0 10px 26px rgba(228,55,119,.28);}"
@@ -116,6 +138,12 @@
       + '<circle class="fg" cx="18" cy="18" r="15" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"></circle>'
       + '</svg><div class="ringtxt">'+Math.min(count,GOAL)+'/'+GOAL+'</div></div>';
   }
+  function greetHtml(){
+    var name = getName();
+    var av = name ? name.charAt(0).toUpperCase() : '👋';
+    return '<div class="greet"><div class="avatar">'+av+'</div><div class="gtxt">'
+      + '<div class="hi">Hoi,</div><div class="name">'+(name?name:'welkom terug')+'</div></div></div>';
+  }
   function weekRow(daysSet){
     var now = new Date(), dow = (now.getDay()+6)%7;
     var monday = new Date(now); monday.setDate(now.getDate()-dow);
@@ -153,7 +181,7 @@
     var daysSet = {}; for(var i=0;i<daysArr.length;i++) daysSet[String(daysArr[i])] = true;
 
     var lw = readLw();
-    if(lw.card){ try{ lw.card.style.display = 'none'; }catch(e){} }   // origineel LW-blok vervangen
+    if(lw.card){ try{ lw.card.style.display = 'none'; }catch(e){} }
 
     var tiles =
         '<div class="tile streak"><div class="ic">🔥</div><div class="num">'+streak+'</div><div class="lbl">'+(streak===1?'dag':'dagen')+' op rij</div></div>'
@@ -161,10 +189,11 @@
       + '<div class="tile">'+ringSvg(count)+'<div class="lbl">dagdoel</div></div>';
     if(lw.uren!=null) tiles += '<div class="tile"><div class="ic">⏱️</div><div class="num">'+lw.uren+'</div><div class="lbl">uren geleerd</div></div>';
 
-    var wrap = document.getElementById('hlt-acct-wrap');
-    if(!wrap){ wrap = document.createElement('div'); wrap.id = 'hlt-acct-wrap'; wrap.className = 'hlt-acct'; mount(wrap); }
+    if(!wrap){ wrap = document.createElement('div'); wrap.id = 'hlt-acct-wrap'; mount(wrap); }
+    wrap.className = 'hlt-acct';
     wrap.innerHTML =
-        '<div class="row">'+tiles+'</div>'
+        greetHtml()
+      + '<div class="row">'+tiles+'</div>'
       + '<div class="card"><h3 class="ct"><span class="bar"></span>Deze week</h3><div class="week">'+weekRow(daysSet)+'</div></div>'
       + '<div class="card"><h3 class="ct"><span class="bar"></span>Mijlpalen</h3><div class="badges">'+badges(streak,xp)+'</div></div>';
   }
@@ -178,23 +207,16 @@
 
   /* ---------- laden ---------- */
   function load(){
-    var email = getEmail(); if(!email) return false;
+    injectCSS();
+    var email = getEmail();
+    if(!email){ render({}); return; }                    // geen e-mail: toch widget tonen (lege stand + uren)
     try{
       fetch(ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'get', email:email})})
         .then(function(r){ return r.json(); })
         .then(function(d){ render((d && d.state) || {}); })
         .catch(function(){ render({}); });
     }catch(e){ render({}); }
-    return true;
   }
-  function start(){
-    injectCSS();
-    var n = 0;
-    (function tryLoad(){
-      if(load()) return;
-      if(n++ < 25) setTimeout(tryLoad, 300);
-    })();
-  }
-  if(document.readyState === 'complete' || document.readyState === 'interactive'){ setTimeout(start, 0); }
-  else { window.addEventListener('DOMContentLoaded', start); }
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){ setTimeout(load, 0); }
+  else { window.addEventListener('DOMContentLoaded', load); }
 })();
