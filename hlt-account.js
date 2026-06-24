@@ -5,7 +5,7 @@
    (/start). Het blok levert e-mail en voornaam via merge-tags:
 
      <div id="hlt-acct-wrap" data-email="{{user.email}}" data-name="{{user.first_name}}"></div>
-     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=7" defer></script>
+     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=8" defer></script>
 
    De widget rendert IN dat blok: begroeting (avatar 👋 + naam), tegels
    (streak, XP, dagdoel, uren), examen-plan-blok (datum kiezen -> aftellen),
@@ -155,7 +155,31 @@
   + ".hlt-acct .bd.earned .be{filter:none;opacity:1;}"
   + ".hlt-acct .bd .bl{font-size:11px;font-weight:800;margin-top:6px;color:#2A1B33;}"
   + ".hlt-acct .bd .bs{font-size:10px;font-weight:700;color:#9A7E8C;}"
-  + "@media(max-width:560px){.hlt-acct .day .dot{width:34px;height:34px;font-size:16px;}}";
+  + "@media(max-width:560px){"
+  +   ".hlt-acct{margin:6px auto;}"
+  +   ".hlt-acct .greet{gap:12px;margin-bottom:14px;}"
+  +   ".hlt-acct .avatar{width:48px;height:48px;font-size:22px;}"
+  +   ".hlt-acct .gtxt .name{font-size:22px;}"
+  +   ".hlt-acct .row{grid-template-columns:1fr 1fr;gap:10px;}"
+  +   ".hlt-acct .tile{min-height:100px;padding:14px 6px 12px;border-radius:16px;}"
+  +   ".hlt-acct .tile .ic{font-size:23px;}"
+  +   ".hlt-acct .tile .num{font-size:23px;}"
+  +   ".hlt-acct .ringwrap,.hlt-acct .ring{width:64px;height:64px;}"
+  +   ".hlt-acct .card{padding:14px;border-radius:18px;margin-top:12px;}"
+  +   ".hlt-acct .ct{font-size:14px;margin-bottom:10px;}"
+  +   ".hlt-acct .cd-empty{font-size:20px;}"
+  +   ".hlt-acct .sub{font-size:12px;}"
+  +   ".hlt-acct .btns{flex-direction:column;gap:10px;}"
+  +   ".hlt-acct .btn,.hlt-acct .ghost{flex:0 0 auto!important;width:100%!important;min-width:0!important;font-size:15px!important;padding:14px 16px!important;}"
+  +   ".hlt-acct .exam-filled{flex-direction:column;align-items:stretch;gap:14px;}"
+  +   ".hlt-acct .exam-filled .btn{width:100%!important;}"
+  +   ".hlt-acct .cd{font-size:33px;}"
+  +   ".hlt-acct .week{gap:4px;}"
+  +   ".hlt-acct .day .dot{width:34px;height:34px;font-size:16px;}"
+  +   ".hlt-acct .day .dl{font-size:10px;}"
+  +   ".hlt-acct .badges{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}"
+  +   ".hlt-acct .bd{flex:0 0 auto;width:86px;min-width:86px;}"
+  + "}";
 
   function injectCSS(){
     if(document.getElementById('hlt-acct-css')) return;
