@@ -5,7 +5,7 @@
    (/start). Het blok levert e-mail en voornaam via merge-tags:
 
      <div id="hlt-acct-wrap" data-email="{{user.email}}" data-name="{{user.first_name}}"></div>
-     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=4" defer></script>
+     <script src="https://mjhtimmerman.github.io/HaalTheorie/hlt-account.js?v=5" defer></script>
 
    De widget rendert IN dat blok: begroeting (avatar 👋 + naam), tegels
    (streak, XP, dagdoel, uren), examen-plan-blok (datum kiezen -> aftellen),
@@ -138,7 +138,7 @@
   + ".hlt-acct .cd{font-size:40px;font-weight:900;line-height:1;color:#2A1B33;}"
   + ".hlt-acct .cd small{display:block;font-size:13px;font-weight:700;color:#9A7E8C;margin-top:5px;}"
   + ".hlt-acct .replan{margin-top:12px;background:none;border:none;padding:0;color:#C01F5E;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}"
-  + ".hlt-acct .exdate{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}"
+  + ".hlt-acct .exdate{position:absolute!important;width:1px!important;height:1px!important;min-width:0!important;max-width:1px!important;padding:0!important;margin:-1px!important;border:0!important;opacity:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;pointer-events:none!important;}"
   /* week + mijlpalen */
   + ".hlt-acct .week{display:flex;gap:6px;justify-content:space-between;}"
   + ".hlt-acct .day{flex:1;text-align:center;}"
