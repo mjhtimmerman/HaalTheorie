@@ -64,14 +64,17 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.18-playful';
+  window.__HLT_PLAYER_VERSION='v6.19-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
   /* ---------- account-sync (n8n -> Supabase) ----------
-     Vul je n8n productie-webhook in, bv: https://JOUW-N8N/webhook/hlt-xp
+     Supabase edge function (stap 1, live + end-to-end getest). Contract:
+     POST {action,email,local:{xp,streak,count,day,lastPractice}} -> {ok,state:{xp,streak,count,day,last_practice,days}}.
+     action 'sync' = server-side mergen (xp/count = hoogste, streak = hoogste met voortzetting,
+     days = unie, nooit naar beneden). De player gebruikt altijd 'sync' (push + pull samen).
      Leeg laten = sync uit; alles blijft lokaal werken. */
-  var SYNC_URL='';
+  var SYNC_URL='https://upsrxurbwaxismjyddqx.supabase.co/functions/v1/hlt-gamify-sync';
 
   var FONT="'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
 
@@ -326,28 +329,32 @@
   var lastSync=0;
   function syncServer(action){
     if(!SYNC_URL) return; var email=getEmail(); if(!email) return;
-    var now=Date.now(); if(action==='answer'&&now-lastSync<4000) return; lastSync=now;
+    var now=Date.now(); if(action==='answer'&&now-lastSync<4000) return; lastSync=now;  // throttle alleen op antwoorden
     var s=norm(load());
     try{
-      fetch(SYNC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,email:email,local:{xp:s.xp||0,streak:s.streak||0,count:s.count||0,day:s.day||'',lastPractice:s.lastPractice||''}})})
+      /* player gebruikt ALTIJD 'sync' (server mergt naar boven, dus nooit verlies van
+         lokale voortgang; 'get' is read-only en voor de account-widget). */
+      fetch(SYNC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sync',email:email,local:{xp:s.xp||0,streak:s.streak||0,count:s.count||0,day:s.day||'',lastPractice:s.lastPractice||''}})})
       .then(function(r){return r.json();})
       .then(function(st){applyServer(st);})
       .catch(function(){});
     }catch(e){}
   }
   function applyServer(st){
-    if(!st||typeof st.xp!=='number') return;
+    var state=(st&&st.state)?st.state:st;                 // contract: {ok,state}; tolereer ook kale state
+    if(!state||typeof state.xp!=='number') return;
     var s=norm(load());
-    s.xp=st.xp; s.streak=st.streak;
-    if(st.lastPractice) s.lastPractice=st.lastPractice;
-    s.count=(st.day===today())?(st.count||0):0;
+    s.xp=state.xp; s.streak=state.streak;                 // server is canoniek (al naar boven gemerged)
+    var lp=state.last_practice||state.lastPractice; if(lp) s.lastPractice=lp;
+    s.count=(state.day===today())?(state.count||0):0;     // count alleen overnemen als het van vandaag is
+    if(state.days) s.days=state.days;                     // dag-historie (voor de streak-kalender)
     save(s);
     renderBar(); renderAccountWidget();
   }
   window.addEventListener('pagehide',function(){
     if(!SYNC_URL) return; var email=getEmail(); if(!email) return;
     var s=load();
-    try{navigator.sendBeacon(SYNC_URL,JSON.stringify({action:'sync',email:email,local:{xp:s.xp||0,streak:s.streak||0,count:s.count||0,day:s.day||'',lastPractice:s.lastPractice||''}}));}catch(e){}
+    try{navigator.sendBeacon(SYNC_URL,new Blob([JSON.stringify({action:'sync',email:email,local:{xp:s.xp||0,streak:s.streak||0,count:s.count||0,day:s.day||'',lastPractice:s.lastPractice||''}})],{type:'application/json'}));}catch(e){}
   });
 
   /* ---------- gamification-balk ---------- */
@@ -771,6 +778,6 @@
      zonder eerst 10 vragen te beantwoorden. Bv: __HLT_DEMO_CELEBRATE({streak:7,xp:140}) */
   window.__HLT_DEMO_CELEBRATE=function(st){ try{ celebrate(norm(st||load())); }catch(e){ console.warn('demo',e); } };
   setInterval(tick,1200);
-  function init(){ tick(); if(!window.__hltSynced&&getEmail()){window.__hltSynced=true;syncServer('get');} }
+  function init(){ tick(); if(!window.__hltSynced&&getEmail()){window.__hltSynced=true;syncServer('init');} }  // init = eenmalige merge+pull bij openen (nieuw toestel haalt de account-streak op)
   if(document.readyState!=='loading'){init();}else{document.addEventListener('DOMContentLoaded',init);}
 })();
