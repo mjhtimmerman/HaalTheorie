@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.20-playful';
+  window.__HLT_PLAYER_VERSION='v6.21-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -753,10 +753,53 @@
       try{ var prog=doc.querySelector('.lw-qr-nav-wrapper'); if(prog&&pt){ var tx=(prog.textContent||'').trim(); if(tx) pt.textContent=tx; } }catch(e){}
     }catch(e){}
   }
+  /* ===== Cursus-curriculumpagina (/course/<slug>) in merkstijl =====
+     Appearance-only laag op de standaard LearnWorlds course-contents.
+     Tagt elke sectie-rij met .hlt-csec en stylet via gescopede CSS:
+     gradient-nummerbadge, sectie-kaart, gekleurde stap-icoon-chips,
+     eigen ✓-vinkje (los van FontAwesome dat op de pagina 404t). */
+  var COURSE_CSS =
+    "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');"
+  + ".hlt-csec{align-items:flex-start!important;gap:14px!important;margin-bottom:16px!important;}"
+  + ".hlt-csec .lw-course-contents-chapter-num.col{border:0!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important;padding:2px 0 0!important;display:flex!important;align-items:flex-start;justify-content:center;}"
+  + ".hlt-csec h3.lw-course-contents-chapter-num{font-family:'Inter',sans-serif!important;width:52px!important;height:52px!important;min-width:52px!important;border-radius:16px!important;background:linear-gradient(135deg,#5937B0,#9B2F8F,#E43777,#FB7171)!important;color:#fff!important;font-size:21px!important;font-weight:900!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 8px 18px rgba(228,55,119,.28)!important;margin:0!important;line-height:1!important;padding:0!important;}"
+  + ".hlt-csec>.col:not(.lw-course-contents-chapter-num){background:#fff!important;border:2px solid #F0E3E8!important;border-radius:20px!important;padding:18px 20px!important;flex:1 1 auto!important;max-width:none!important;}"
+  + ".hlt-csec .lw-course-contents-chapter-name{font-family:'Inter',sans-serif!important;font-weight:900!important;color:#2A1B33!important;font-size:22px!important;line-height:1.15!important;}"
+  + ".hlt-csec .learnworlds-main-text-large{font-family:'Inter',sans-serif!important;font-size:14px!important;font-weight:600!important;color:#8C7280!important;margin-top:8px!important;}"
+  + ".hlt-csec .lw-course-contents-units{margin-top:14px!important;}"
+  + ".hlt-csec .lw-course-contents-unit{font-family:'Inter',sans-serif!important;border:0!important;border-radius:14px!important;padding:9px 10px!important;margin:0 0 2px!important;align-items:center!important;transition:background .15s;}"
+  + ".hlt-csec .lw-course-contents-unit:hover{background:#FCEAF1!important;}"
+  + ".hlt-csec .lw-contents-svg{color:#C01F5E!important;background:#F7E5EC!important;border-radius:10px!important;padding:6px!important;width:34px!important;height:34px!important;box-sizing:border-box!important;flex:0 0 auto!important;}"
+  + ".hlt-csec .lw-course-contents-unit .learnworlds-main-text{font-family:'Inter',sans-serif!important;font-weight:700!important;color:#2A1B33!important;}"
+  + ".hlt-csec .lw-course-unit-check{display:none!important;}"
+  + ".hlt-csec .lw-course-contents-unit.lw-course-unit-completed::after{content:'\\2713';flex:0 0 auto;margin-left:8px;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#9B2F8F,#E43777,#FB7171);color:#fff;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(228,55,119,.3);}"
+  + ".hlt-csec .lw-course-contents-unit:not(.lw-course-unit-completed)::after{content:'';flex:0 0 auto;margin-left:8px;width:24px;height:24px;border-radius:50%;border:2px solid #E7D7DF;box-sizing:border-box;}"
+  + "@media(max-width:560px){.hlt-csec h3.lw-course-contents-chapter-num{width:44px!important;height:44px!important;min-width:44px!important;font-size:18px!important;}.hlt-csec>.col:not(.lw-course-contents-chapter-num){padding:14px 14px!important;}.hlt-csec .lw-course-contents-chapter-name{font-size:19px!important;}}";
+  function injectCourseCSS(){
+    if(document.getElementById('hlt-course-css')) return;
+    var s=document.createElement('style'); s.id='hlt-course-css'; s.textContent=COURSE_CSS; document.head.appendChild(s);
+  }
+  function styleCourse(){
+    try{
+      if(!document.querySelector('.lw-course-contents-units')) return;   // alleen op de curriculum-pagina
+      injectCourseCSS();
+      var names=document.querySelectorAll('.lw-course-contents-chapter-name');
+      for(var i=0;i<names.length;i++){
+        var row=names[i];
+        for(var k=0;k<9&&row.parentElement;k++){
+          row=row.parentElement;
+          if(row.classList&&row.classList.contains('lw-cols')&&row.querySelector('.lw-course-contents-chapter-num')) break;
+        }
+        if(row&&row.classList&&row.classList.contains('lw-cols')) row.classList.add('hlt-csec');
+      }
+    }catch(e){}
+  }
+
   function tick(){
     injectShell();
     renderAccountWidget();
     cleanChapterNums();
+    styleCourse();
     if(!document.body||!document.body.classList.contains('slug-path-player')) return;
     var f=document.getElementById('playerFrame'); if(!f)return;
     injectStyle(f); bindFrame(f); ebookFrame(f); buildBar(); buildSubmitBar();
