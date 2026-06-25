@@ -64,7 +64,7 @@
     }
     if(!courseAllowed()) return;                               // WAAR: alleen toegestane cursussen
   }catch(e){ if(CANARY) return; }                              // bij twijfel in canary: niet draaien
-  window.__HLT_PLAYER_VERSION='v6.19-playful';
+  window.__HLT_PLAYER_VERSION='v6.20-playful';
   window.__HLT_CANARY=CANARY;
   window.__HLT_COURSE_OK=true;
 
@@ -385,6 +385,9 @@
   function positionBar(bar){
     try{
       if(!bar) return;
+      // Beheerder/auteur-modus: het bewerkpotlood (z-index 2) mag niet onder de balk (z-index 6) vallen.
+      // Cursisten hebben deze auteur-knoppen niet -> dan blijft de balk gewoon op z-index 6 (CSS).
+      try{ bar.style.zIndex = document.querySelector('#editView,.-default-course-player-author-edit') ? '1' : ''; }catch(_e){}
       var col=document.querySelector('.-second-col'); if(!col) return;
       var colR=col.getBoundingClientRect();
       var tb=document.querySelector('.-second-col .-default-course-player-topbar,.-default-course-player-topbar');
